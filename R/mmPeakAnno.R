@@ -346,7 +346,7 @@ mm_geneBound <- function(peak_GR,
 
 
     } else if (mean(noPeakBind_genes %in% all_genes) < 1) {
-        warning("some of your input genes is not in your Txdb",
+        warning("some of your input genes is not in your Txdb\n",
                 call. = FALSE
         )
         noPeakBind_genes <- noPeakBind_genes[noPeakBind_genes %in% all_genes]

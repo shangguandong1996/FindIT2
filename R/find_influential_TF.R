@@ -311,8 +311,10 @@ findIT_TTPair <- function(input_genes,
     TF_fihserMt <- TFHit_summary[, -c(1:2)]
     tibble::tibble(
         TF = TFHit_summary$TF,
-        pvalue = apply(TF_fihserMt, 1, function(x) fisher.test(matrix(x, nrow = 2))$p.value),
-        odds_ratio = apply(TF_fihserMt, 1, function(x) fisher.test(matrix(x, nrow = 2))$estimate)
+        pvalue = apply(TF_fihserMt, 1, function(x) fisher.test(matrix(x, nrow = 2),
+                                                               alternative = "greater")$p.value),
+        odds_ratio = apply(TF_fihserMt, 1, function(x) fisher.test(matrix(x, nrow = 2),
+                                                                   alternative = "greater")$estimate)
     ) %>%
         dplyr::mutate(pvalue = dplyr::case_when(
             pvalue > 1 ~ 1, # https://github.com/StoreyLab/qvalue/issues/7
@@ -571,6 +573,7 @@ findIT_enrichInShuffle <- function(input_feature_id,
             TF_id = x,
             pvalue = pvalue,
             hitInput_N = true_number,
+            shuffle_meanN = mean(background_number),
             TFPeak_number = length(TF_GR)
         ) -> df
         return(df)
@@ -640,8 +643,10 @@ findIT_enrichInAll <- function(input_feature_id,
 
     data.frame(
         TF_id = TFHit_summary$TF_id,
-        pvalue = apply(TF_fihserMt, 1, function(x) fisher.test(matrix(x, nrow = 2))$p.value),
-        odds_ratio = apply(TF_fihserMt, 1, function(x) fisher.test(matrix(x, nrow = 2))$estimate)
+        pvalue = apply(TF_fihserMt, 1, function(x) fisher.test(matrix(x, nrow = 2),
+                                                               alternative = "greater")$p.value),
+        odds_ratio = apply(TF_fihserMt, 1, function(x) fisher.test(matrix(x, nrow = 2),
+                                                                   alternative = "greater")$estimate)
     ) %>%
         dplyr::mutate(pvalue = dplyr::case_when(
             pvalue > 1 ~ 1, # https://github.com/StoreyLab/qvalue/issues/7
@@ -656,15 +661,28 @@ findIT_enrichInAll <- function(input_feature_id,
             num_TFHit_inputFeature = num_topLeft
         ) %>%
         dplyr::select(TF_id, num_TFHit_inputFeature, inputRatio, bgRatio, pvalue, odds_ratio) %>%
+        dplyr::mutate(p.adj = p.adjust(pvalue))
+
+    qvalue_result <- tryCatch(qvalue::qvalue(
+        p = final_result$pvalue,
+        fdr.level = 0.05,
+        pi0.method = "bootstrap"
+    ),
+    error = function(e) NULL
+    )
+
+    if (class(qvalue_result) == "qvalue") {
+        qvalues <- qvalue_result$qvalues
+    } else {
+        qvalues <- NA
+    }
+
+    final_result %>%
         dplyr::mutate(
-            p.adj = p.adjust(pvalue),
-            qvalue = qvalue::qvalue(pvalue,
-                                    fdr.level = 0.05,
-                                    pi0.method = "bootstrap"
-            )$qvalue,
-            rank = rank(-odds_ratio)
+            qvalue = qvalues,
+            rank = rank(pvalue)
         ) %>%
-        dplyr::arrange(-odds_ratio, pvalue)
+        dplyr::arrange(pvalue) -> final_result
 
     return(final_result)
 }
