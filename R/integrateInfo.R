@@ -228,8 +228,12 @@ integrate_replicates <- function(mt,
     sample <- unique(colData$type)
 
     sapply(sample, function(x) {
-        apply(mt[, x == replicates], 1, fun)
+        apply(mt[, x == replicates, drop = FALSE], 1, fun)
     }) -> result
+
+    if (length(result) == 1){
+        return(result)
+    }
 
     if (type == "rank") {
         result <- apply(result, 2, function(x) rank(-x))

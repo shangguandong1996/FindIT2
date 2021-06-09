@@ -1,4 +1,4 @@
-utils::globalVariables(c(".", "percent", "final_result"))
+utils::globalVariables(c(".", "percent", "merge_result"))
 
 #' shinyParse_findIT_regionRP
 #'
@@ -35,8 +35,8 @@ shinyParse_findIT_regionRP <- function(merge_result,
 
     hits_df <- metadata(merge_result)$hits_df
 
-    TF_percent <- SummarizedExperiment::assays(final_result)$TF_percent
-    TF_pvalue <- SummarizedExperiment::assays(final_result)$TF_pvalue
+    TF_percent <- SummarizedExperiment::assays(merge_result)$TF_percent
+    TF_pvalue <- SummarizedExperiment::assays(merge_result)$TF_pvalue
     TF_pvalue_rank <- apply(TF_pvalue, 2, rank)
 
     all_genes <- unique(percent_data$gene_id)
