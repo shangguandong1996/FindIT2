@@ -97,7 +97,8 @@ findIT_regionRP <- function(regionRP,
         feature_id = peakGR_origin$feature_id[subjectHits(hits)],
         stringsAsFactors = FALSE
     ) %>%
-        dplyr::distinct(TF_id, feature_id, .keep_all = TRUE) -> hits_df
+        dplyr::distinct(TF_id, feature_id, .keep_all = TRUE) %>%
+        dplyr::as_tibble() -> hits_df
 
     # select related feature_id to speed up below calculation
     input_related_feature <- subset(fullRP_GR, gene_id %in% genes_twoSets)$feature_id
