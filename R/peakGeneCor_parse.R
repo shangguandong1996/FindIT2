@@ -74,7 +74,9 @@ plot_peakGeneCor <- function(mmAnnoCor,
             names_to = "time_point",
             values_to = "peakScore"
         ) %>%
-        mutate(geneScore = rep(geneExpr, feature_N)) -> peak_gene_score
+        mutate(time_point = factor(time_point,
+                                   levels = unique(colnames(peakScoreMt))),
+               geneScore = rep(geneExpr, feature_N)) -> peak_gene_score
 
     plot_data <- inner_join(
         peak_gene_score,
