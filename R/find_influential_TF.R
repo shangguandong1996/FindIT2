@@ -270,14 +270,14 @@ findIT_TTPair <- function(input_genes,
 
     # some human gene maybe look like number, like 12340?
     TF_target_database %>%
-        dplyr::distinct(TF, target_gene,
+        dplyr::distinct(TF_id, target_gene,
                         .keep_all = TRUE
         ) %>%
         dplyr::mutate(
-            TF = as.character(TF),
+            TF_id = as.character(TF_id),
             target_gene = as.character(target_gene)
         ) %>%
-        dplyr::group_by(TF) %>%
+        dplyr::group_by(TF_id) %>%
         dplyr::mutate(num_TFHit_bg = dplyr::n()) %>%
         dplyr::filter(
             num_TFHit_bg > TFHit_min,
@@ -295,7 +295,7 @@ findIT_TTPair <- function(input_genes,
     TF_target_filter %>%
         dplyr::mutate(num_TFHit_inputGene = dplyr::n()) %>%
         dplyr::ungroup() %>%
-        dplyr::select(TF, num_TFHit_bg, num_TFHit_inputGene) %>%
+        dplyr::select(TF_id, num_TFHit_bg, num_TFHit_inputGene) %>%
         dplyr::distinct(.keep_all = TRUE) %>%
         dplyr::rename(num_topLeft = num_TFHit_inputGene) %>%
         # N of TF Hit in inputGene
@@ -317,7 +317,7 @@ findIT_TTPair <- function(input_genes,
 
     TF_fihserMt <- TFHit_summary[, -c(1:2)]
     tibble::tibble(
-        TF = TFHit_summary$TF,
+        TF_id = TFHit_summary$TF_id,
         pvalue = apply(TF_fihserMt, 1, function(x) fisher.test(matrix(x, nrow = 2),
                                                                alternative = "greater")$p.value),
         odds_ratio = apply(TF_fihserMt, 1, function(x) fisher.test(matrix(x, nrow = 2),
@@ -337,7 +337,7 @@ findIT_TTPair <- function(input_genes,
             bgRatio = paste0(num_TFHit_bg, "/", num_gene_bg),
             num_TFHit_input = num_topLeft
         ) %>%
-        dplyr::select(TF, num_TFHit_input, inputRatio, bgRatio, pvalue, odds_ratio) %>%
+        dplyr::select(TF_id, num_TFHit_input, inputRatio, bgRatio, pvalue, odds_ratio) %>%
         dplyr::mutate(p.adj = p.adjust(pvalue)) -> final_result
 
     qvalue_result <- tryCatch(qvalue::qvalue(
@@ -736,6 +736,7 @@ findIT_MARA <- function(input_feature_id,
 
     # some feature_id may not hit by your TF
     # which means feature in all TF will be 0
+    # TODO:check whether need to add value = 0
     fill_hitN <- data.frame(TF_id = rep(all_TF, each = length(input_feature_id)),
                             feature_id = rep(input_feature_id, length(all_TF)),
                             value = 0)
