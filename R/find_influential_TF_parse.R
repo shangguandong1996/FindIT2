@@ -83,7 +83,6 @@ payAttention_gene <- function(all_genes,
                    tableOutput("sumRP"),
                    tableOutput("gene_percent"),
                    tableOutput("fullRP"),
-                   tableOutput("hitsDf"),
                    tableOutput("GRange")
             )
         )
@@ -91,9 +90,6 @@ payAttention_gene <- function(all_genes,
 
     server <- function(input, output, session) {
         data <- reactive(subset(fullRP_GR, gene_id == input$gene))
-        data_mcol <- reactive(
-            mcols(subset(fullRP_GR, gene_id == input$gene))[, c("feature_id", "gene_id")]
-        )
 
         output$sumRP <- renderTable(sumRP_data[input$gene, , drop = FALSE] %>%
                                         tibble::as_tibble(rownames = "gene_id"))
@@ -104,39 +100,20 @@ payAttention_gene <- function(all_genes,
                                                    TF_id == input$tf)
         )
 
-        # output$hitsDf <- renderTable(cbind(mcols(data())[, c("feature_id", "gene_id")],
-        #                                    fullRP_data[names(data()), ]) %>%
-        #                                  tibble::as_tibble() %>%
-        #                                  dplyr::inner_join(
-        #                                      dplyr::filter(hits_df,
-        #                                                    TF_id == input$tf)
-        #                                  ) %>%
-        #                                  select(feature_id,
-        #                                         TF_id,
-        #                                         hit_N,
-        #                                         hitN_norm))
-
-        output$hitsDf <- renderTable(hits_df %>%
-                                         dplyr::filter(TF_id == input$tf,
-                                                feature_id %in% data_mcol()$feature_id) %>%
-            dplyr::select(feature_id, TF_id, hit_N, hitN_norm))
 
 
-
-        output$fullRP <- renderTable(cbind(data_mcol(),
+        output$fullRP <- renderTable(cbind(mcols(data())[, c("feature_id",
+                                                             "gene_id")],
                                            fullRP_data[names(data()), ]) %>%
                                          tibble::as_tibble() %>%
                                          dplyr::inner_join(
                                              dplyr::filter(hits_df,
                                                            TF_id == input$tf)
                                          ) %>%
-                                         dplyr::select(-c(gene_id,
-                                                          hit_N,
-                                                          hitN_norm)) %>%
                                          dplyr::select(feature_id,
                                                        TF_id,
-                                                       dplyr::everything())
-
+                                                       everything()) %>%
+                                         dplyr::select(-gene_id)
         )
 
         output$GRange <- renderTable(data.frame(data()))

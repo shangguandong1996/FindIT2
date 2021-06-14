@@ -90,13 +90,19 @@ findIT_regionRP <- function(regionRP,
 
     hits <- GenomicRanges::findOverlaps(TF_GR_database, peakGR_origin)
 
-    # some motif may hits more than one times in one peak
-    # so I distinct to keep below summarise code can work
+    # although some motif may hits more than one times in one peak
+    # matain these info is not useful for find IT based on percent
+
+    # these info can be useful for ridge analysis, but not here
+
     data.frame(
         TF_id = TF_GR_database$TF_id[queryHits(hits)],
         feature_id = peakGR_origin$feature_id[subjectHits(hits)],
-        stringsAsFactors = FALSE
-    ) %>%
+        stringsAsFactors = FALSE) %>%
+        # dplyr::group_by(TF_id, feature_id) %>%
+        # dplyr::summarise(hit_N = dplyr::n()) %>%
+        # dplyr::mutate(hitN_norm = hit_N - sum(hit_N) / length(peakGR_origin)) %>%
+        # dplyr::ungroup() -> hits_df
         dplyr::distinct(TF_id, feature_id, .keep_all = TRUE) %>%
         dplyr::as_tibble() -> hits_df
 
@@ -686,4 +692,126 @@ findIT_enrichInAll <- function(input_feature_id,
         dplyr::arrange(pvalue) -> final_result
 
     return(final_result)
+}
+
+#' findIT_MARA
+#'
+#' @importFrom glmnet cv.glmnet glmnet
+#'
+#' @param input_feature_id peaks which you want to find influentail TF for
+#' @param peak_GR all peak sets.Your input_feature_id is a part of it.
+#' @param peakScoreMt peak count matrix.
+#' @param TF_GR_database TF peak GRange with a column named TF_id representing you TF name
+#' @param log whether you want to log your peakScoreMt
+#' @param meanScale whether you want to mean-centered per row
+#'
+#' @return a data.frame
+#' @export
+#'
+#' @examples
+findIT_MARA <- function(input_feature_id,
+                        peak_GR,
+                        peakScoreMt,
+                        TF_GR_database,
+                        log = TRUE,
+                        meanScale = TRUE) {
+    input_feature_id <- unique(input_feature_id)
+
+    hits <- GenomicRanges::findOverlaps(TF_GR_database, peak_GR)
+
+    all_TF <- unique(TF_GR_database$TF_id)
+
+    data.frame(
+        TF_id = TF_GR_database$TF_id[queryHits(hits)],
+        feature_id = peak_GR$feature_id[subjectHits(hits)],
+        stringsAsFactors = FALSE) -> hits_df
+
+    hits_df %>%
+        dplyr::group_by(TF_id) %>%
+        dplyr::summarise(norm = dplyr::n() / length(peak_GR)) -> TF_normFactor
+
+    hits_df %>%
+        dplyr::group_by(TF_id, feature_id) %>%
+        dplyr::summarise(hit_N = dplyr::n()) -> TF_hitN
+
+    # some feature_id may not hit by your TF
+    # which means feature in all TF will be 0
+    fill_hitN <- data.frame(TF_id = rep(all_TF, each = length(input_feature_id)),
+                            feature_id = rep(input_feature_id, length(all_TF)),
+                            value = 0)
+    fill_hitN %>%
+        dplyr::left_join(TF_hitN) %>%
+        replace(is.na(.), 0) %>%
+        dplyr::select(TF_id, feature_id, hit_N) %>%
+        tidyr::pivot_wider(names_from = TF_id,
+                           values_from = hit_N) -> hitN_select_wide
+
+    hitN_mt <- as.data.frame(hitN_select_wide[, -1])
+    rownames(hitN_mt) <- hitN_select_wide$feature_id
+    hitN_mt <- hitN_mt[, TF_normFactor$TF_id]
+    hitN_mt <- sweep(hitN_mt, 2, TF_normFactor$norm, "-")
+
+    peakScoreMt_select <- peakScoreMt[input_feature_id, ]
+
+    if (log) {
+        peakScoreMt_select <- log(peakScoreMt_select + 1)
+    }
+
+    if (meanScale){
+        peakScoreMt_select <- t(apply(peakScoreMt_select, 1,
+                                      function(x) x - mean(x))
+                                )
+    }
+
+    if (mean(rownames(peakScoreMt_select) == rownames(hitN_mt)) < 1){
+        stop("something wrong")
+    }
+
+    suppressMessages(hitN_mt %>%
+        dplyr::as_tibble(rownames = "feature_id") %>%
+        dplyr::inner_join(
+            dplyr::as_tibble(peakScoreMt_select,
+                             rownames = "feature_id")
+            )) -> merge_df
+
+    purrr::map(colnames(peakScoreMt_select), function(sample){
+        train_data <- merge_df[, c(sample, all_TF)]
+        colnames(train_data)[1] <- "value"
+
+
+        x = model.matrix(value ~ ., train_data)[, -1]
+        y = train_data$value
+
+        cv.out = cv.glmnet(x, y, alpha = 0)
+
+        model <- glmnet(x, y, alpha = 0, lambda = cv.out$lambda.min)
+        data.frame(coef(model)[-1, 1]) %>%
+            dplyr::as_tibble(rownames = "TF_id") -> activity_df
+        activity_df[, 2] <- INT(activity_df[, 2])
+        colnames(activity_df)[2] <- sample
+
+        # should we need cor info ?
+        # cor_data <- cor(train_data)[1, -1]
+        #
+        # suppressMessages(
+        #     activity_df %>%
+        #         dplyr::inner_join(
+        #             data.frame(TF_id = names(cor_data),
+        #                        cor = cor_data)
+        #         )
+        # ) -> activity_df
+        #
+        # colnames(activity_df)[c(2,3)] <- paste0(sample, c("", "_cor"))
+
+
+        return(activity_df)
+        #activity_df[, 2] <-
+
+    }) -> TF_activity_list
+
+    suppressMessages(
+        purrr::reduce(TF_activity_list, inner_join)
+        ) -> TF_activity_df
+
+    return(TF_activity_df)
 }

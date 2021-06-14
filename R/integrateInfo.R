@@ -181,8 +181,10 @@ integrate_ChIP_RNA <- function(result_geneRP,
 #' correspond to columns of mt.
 #' @param fun the function you want to use. If set NULL, program will decide integrate
 #' method according to your 'type' parameter.
-#' @param type one of 'value', 'rank', 'pvalue'. value will use mean to integrate replicates,
-#' rank will use product, and pvalue will use CCT(Cauchy distribution)
+#' @param type one of 'value', 'rank', 'rank_zscore', pvalue'.
+#' value will use mean to integrate replicates,
+#' rank will use product, rank_zscore will use Stouffer's method
+#' and pvalue will use CCT(Cauchy distribution)
 #'
 #'
 #' @return matrix
@@ -196,6 +198,7 @@ integrate_ChIP_RNA <- function(result_geneRP,
 #' colData <- data.frame(
 #' type = gsub("_[0-9]","", colnames(mt)),
 #' row.names = colnames(mt))
+#'
 #'
 #'integrate_replicates(mt, colData, type = "value")
 #'
@@ -217,6 +220,7 @@ integrate_replicates <- function(mt,
         fun <- switch(type,
                       value = mean,
                       rank = prod,
+                      rank_zscore = Stouffer_method,
                       pvalue = CCT,
                       stop("Invalid type value")
         )
@@ -307,4 +311,17 @@ CCT <- function(pvals, weights = NULL) {
         pval <- 1 - pcauchy(cct.stat)
     }
     return(pval)
+}
+
+INT <- function(x){
+    # https://www.biostars.org/p/80597/
+    # qnorm((rank(x,na.last="keep")-0.5)/sum(!is.na(x)))
+    # origin paper
+    # dx.doi.org/10.1038/nature11401
+    qnorm((rank(x,na.last="keep")-0.5)/sum(!is.na(x)))
+}
+
+Stouffer_method <- function(zscore){
+    # https://www.biostars.org/p/370149/
+    sum(zscore)/sqrt(length(zscore))
 }
