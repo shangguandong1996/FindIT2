@@ -736,14 +736,13 @@ findIT_MARA <- function(input_feature_id,
 
     # some feature_id may not hit by your TF
     # which means feature in all TF will be 0
-    # TODO:check whether need to add value = 0
     fill_hitN <- data.frame(TF_id = rep(all_TF, each = length(input_feature_id)),
-                            feature_id = rep(input_feature_id, length(all_TF)),
-                            value = 0)
+                            feature_id = rep(input_feature_id, length(all_TF))
+                            )
+
     fill_hitN %>%
         dplyr::left_join(TF_hitN) %>%
         replace(is.na(.), 0) %>%
-        dplyr::select(TF_id, feature_id, hit_N) %>%
         tidyr::pivot_wider(names_from = TF_id,
                            values_from = hit_N) -> hitN_select_wide
 
