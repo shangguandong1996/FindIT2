@@ -6,6 +6,8 @@ utils::globalVariables(c("TF", "target_gene", "num_TFHit_bg",
                          "bgRatio", "odds_ratio"))
 utils::globalVariables(c("TF_id", "num_TFHit_bg", "num_topLeft", "num_bottomLeft",
                          "num_topRight", "num_TFHit_inputFeature"))
+utils::globalVariables(c("hit_N"))
+
 
 #' findI(nfluential)T(F)_regionRP
 #'
@@ -697,6 +699,8 @@ findIT_enrichInAll <- function(input_feature_id,
 #' findIT_MARA
 #'
 #' @importFrom glmnet cv.glmnet glmnet
+#' @importFrom stats model.matrix
+#' @importFrom stats coef
 #'
 #' @param input_feature_id peaks which you want to find influentail TF for
 #' @param peak_GR all peak sets.Your input_feature_id is a part of it.
@@ -709,6 +713,8 @@ findIT_enrichInAll <- function(input_feature_id,
 #' @export
 #'
 #' @examples
+#'
+#'
 findIT_MARA <- function(input_feature_id,
                         peak_GR,
                         peakScoreMt,
@@ -748,7 +754,7 @@ findIT_MARA <- function(input_feature_id,
 
     hitN_mt <- as.data.frame(hitN_select_wide[, -1])
     rownames(hitN_mt) <- hitN_select_wide$feature_id
-    hitN_mt <- hitN_mt[, TF_normFactor$TF_id]
+    hitN_mt <- hitN_mt[, TF_normFactor$TF_id, drop = FALSE]
     hitN_mt <- sweep(hitN_mt, 2, TF_normFactor$norm, "-")
 
     peakScoreMt_select <- peakScoreMt[input_feature_id, ]
@@ -775,11 +781,22 @@ findIT_MARA <- function(input_feature_id,
             )) -> merge_df
 
     purrr::map(colnames(peakScoreMt_select), function(sample){
+
         train_data <- merge_df[, c(sample, all_TF)]
         colnames(train_data)[1] <- "value"
 
+        if (length(all_TF) == 1) {
+            tibble::tibble(TF_id = all_TF,
+                           cor = cor(train_data)[1, -1]) -> activity_df
 
-        x = model.matrix(value ~ ., train_data)[, -1]
+            colnames(activity_df)[2] <- sample
+
+            return(activity_df)
+
+        }
+
+
+        x = model.matrix(value ~ ., train_data)[, -1, drop = FALSE]
         y = train_data$value
 
         cv.out = cv.glmnet(x, y, alpha = 0)

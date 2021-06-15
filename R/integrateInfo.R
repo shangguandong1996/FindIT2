@@ -313,6 +313,7 @@ CCT <- function(pvals, weights = NULL) {
     return(pval)
 }
 
+#' @importFrom stats qnorm
 INT <- function(x){
     # https://www.biostars.org/p/80597/
     # qnorm((rank(x,na.last="keep")-0.5)/sum(!is.na(x)))
