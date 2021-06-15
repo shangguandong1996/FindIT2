@@ -112,7 +112,7 @@ payAttention_gene <- function(all_genes,
                                          ) %>%
                                          dplyr::select(feature_id,
                                                        TF_id,
-                                                       everything()) %>%
+                                                       dplyr::everything()) %>%
                                          dplyr::select(-gene_id)
         )
 

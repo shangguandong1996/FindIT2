@@ -5,7 +5,7 @@ Date: 2021-06-07
 Authors@R:
     c(
     person("Guandong", "Shang", role = c("aut", "cre"),
-    email = "shangguandong@cemps.com",
+    email = "shangguandong@cemps.ac.cn",
     comment = c(ORCID = "0000-0002-9509-0314"))
     )
 Description: What the package does (one paragraph).
@@ -25,7 +25,6 @@ Suggests:
     TxDb.Athaliana.BioMart.plantsmart28
 VignetteBuilder: knitr
 Depends: 
-    R (>= 2.10),
     GenomicRanges
 Imports: 
     withr,
@@ -52,4 +51,5 @@ Imports:
     MultiAssayExperiment,
     IRanges,
     progress,
-    purrr
+    purrr,
+    glmnet

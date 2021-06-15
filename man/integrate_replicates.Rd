@@ -15,8 +15,10 @@ correspond to columns of mt.}
 \item{fun}{the function you want to use. If set NULL, program will decide integrate
 method according to your 'type' parameter.}
 
-\item{type}{one of 'value', 'rank', 'pvalue'. value will use mean to integrate replicates,
-rank will use product, and pvalue will use CCT(Cauchy distribution)}
+\item{type}{one of 'value', 'rank', 'rank_zscore', pvalue'.
+value will use mean to integrate replicates,
+rank will use product, rank_zscore will use Stouffer's method
+and pvalue will use CCT(Cauchy distribution)}
 }
 \value{
 matrix
@@ -32,6 +34,7 @@ rownames(mt) <- paste0("TF", 1:10)
 colData <- data.frame(
 type = gsub("_[0-9]","", colnames(mt)),
 row.names = colnames(mt))
+
 
 integrate_replicates(mt, colData, type = "value")
 

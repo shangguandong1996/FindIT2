@@ -1,3 +1,6 @@
+utils::globalVariables(c("distanceToTSS_abs", "peak_gene_pair",
+                         "promoter_feature"))
+
 #' peakGeneCor
 #'
 #' @import BiocParallel
@@ -139,6 +142,7 @@ peakGeneCor <- function(mmAnno,
     mmAnno <- sort(c(mmAnno_drop, mmAnno_left))
     metadata(mmAnno)$peakScoreMt <- peakScoreMt
     metadata(mmAnno)$geneScoreMt <- geneScoreMt
+    metadata(mmAnno)$mmCor_mode <- "peakGeneCor"
 
     return(mmAnno)
 }
@@ -153,11 +157,27 @@ peakGeneCor <- function(mmAnno,
 #' @param up_scanEnhancer the scan distance which is used to scan feature
 #' @param down_scanEnhacner the scan distance which is used to scan feature
 #' @param peakScoreMt peak count matrix. The rownames are feature_id in peak_GR
+#' @param parallel whether you want to parallel to speed up
 #'
 #' @return mmAnno with Cor, pvalue,padj,qvalue column
 #' @export
 #'
 #' @examples
+#'
+#' data("ATAC_normCount")
+#'
+#' library(TxDb.Athaliana.BioMart.plantsmart28)
+#' Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+#' seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
+#' peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
+#' peak_GR <- loadPeakFile(peak_path)[1:100]
+#'
+#' enhancerPromoterCor(peak_GR = peak_GR,
+#' Txdb = Txdb,
+#' peakScoreMt = ATAC_normCount,
+#' parallel = FALSE) -> mm_ePLink
+#'
+#'
 enhancerPromoterCor <- function(peak_GR,
                                 Txdb,
                                 up_scanPromoter = 500,
@@ -165,7 +185,7 @@ enhancerPromoterCor <- function(peak_GR,
                                 up_scanEnhancer = 2e4,
                                 down_scanEnhacner = 2e4,
                                 peakScoreMt,
-                                parallel){
+                                parallel = FALSE){
 
     mm_geneScan(peak_GR = peak_GR,
                 Txdb = Txdb,
@@ -264,6 +284,8 @@ enhancerPromoterCor <- function(peak_GR,
     mm_scan$qvalue <- qvalues
 
     metadata(mm_scan)$mm_promoter_tidy <- mm_promoter_tidy
+    metadata(mm_scan)$peakScoreMt <- peakScoreMt
+    metadata(mm_scan)$mmCor_mode <- "enhancerPromoterCor"
 
     return(mm_scan)
 

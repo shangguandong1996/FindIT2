@@ -1,4 +1,5 @@
-utils::globalVariables(c("peakScore", "geneScore", "x", "y", "label"))
+utils::globalVariables(c("peakScore", "geneScore", "x", "y", "label",
+                         "time_point"))
 utils::globalVariables(c("cor", "pvalue"))
 
 #' plot_peakGeneCor
@@ -51,6 +52,8 @@ plot_peakGeneCor <- function(mmAnnoCor,
                              addLine = TRUE,
                              addFullInfo = TRUE,
                              sigShow = "pvalue") {
+
+    # TODO:rewrite plot_peakGeneCor to accept result of enhancerPromoterCor
 
     peakScoreMt <- metadata(mmAnnoCor)$peakScoreMt
     geneScoreMt <- metadata(mmAnnoCor)$geneScoreMt
@@ -112,7 +115,9 @@ plot_peakGeneCor <- function(mmAnnoCor,
             mutate(label = paste0(
                 "dist_to_TSS = ", distanceToTSS,
                 "\ncor_value = ", round(cor, digits = 2),
-                "\n", sigShow, " = ", format(!!sym(sigShow), scientific = TRUE)
+                "\n", sigShow, " = ", format(!!sym(sigShow),
+                                             scientific = TRUE,
+                                             digits = 2)
             )) -> pos_Info
 
         p <- p +
