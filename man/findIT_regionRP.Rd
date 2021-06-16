@@ -35,6 +35,31 @@ find Influential TF of your input gene set based on regulatory potential data an
 motif data
 }
 \examples{
-#see in vignettes
+data("ATAC_normCount")
+data("input_genes")
+library(TxDb.Athaliana.BioMart.plantsmart28)
+Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
+
+peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
+peak_GR <- loadPeakFile(peak_path)
+
+ChIP_peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+ChIP_peak_GR <- loadPeakFile(ChIP_peak_path)
+ChIP_peak_GR$TF_id <- "AT1G28300"
+
+mmAnno <- mm_geneScan(peak_GR,Txdb)
+
+calcRP_region(mmAnno = mmAnno,
+peakScoreMt = ATAC_normCount,
+Txdb = Txdb,
+Chrs_included = "Chr5") -> regionRP
+
+set.seed(20160806)
+findIT_regionRP(regionRP = regionRP,
+                Txdb = Txdb,
+                TF_GR_database = ChIP_peak_GR,
+                input_genes = input_genes,
+                background_number = 3000) -> reslut_findIT_regionRP
 
 }

@@ -5,7 +5,7 @@ Date: 2021-06-07
 Authors@R:
     c(
     person("Guandong", "Shang", role = c("aut", "cre"),
-    email = "shangguandong@cemps.ac.cn",
+    email = "shangguandong1996@163.com",
     comment = c(ORCID = "0000-0002-9509-0314"))
     )
 Description: What the package does (one paragraph).
@@ -19,7 +19,6 @@ RoxygenNote: 7.1.1
 Suggests: 
     BiocStyle,
     knitr,
-    RefManageR,
     rmarkdown,
     sessioninfo,
     TxDb.Athaliana.BioMart.plantsmart28

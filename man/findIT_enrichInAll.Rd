@@ -21,6 +21,16 @@ find influential TF of your input peak set compared with your whole peak sets
 based on TF ChIP-Seq or motif data.
 }
 \examples{
-#see in vignettes
+data("input_feature_id")
+peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
+peak_GR <- loadPeakFile(peak_path)
+ChIP_peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+ChIP_peak_GR <- loadPeakFile(ChIP_peak_path)
+ChIP_peak_GR$TF_id <- "AT1G28300"
+
+findIT_enrichInAll(input_feature_id = input_feature_id,
+peak_GR = peak_GR,
+TF_GR_database = ChIP_peak_GR) -> result_findIT_enrichInAll
+
 
 }

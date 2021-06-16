@@ -53,8 +53,6 @@ plot_peakGeneCor <- function(mmAnnoCor,
                              addFullInfo = TRUE,
                              sigShow = "pvalue") {
 
-    # TODO:rewrite plot_peakGeneCor to accept result of enhancerPromoterCor
-
     peakScoreMt <- metadata(mmAnnoCor)$peakScoreMt
     geneScoreMt <- metadata(mmAnnoCor)$geneScoreMt
 

@@ -40,6 +40,19 @@ data.frame
 find influential TF of your input gene set based on TF ChIP-Seq or motif data
 }
 \examples{
-#see in vignettes
+data("input_genes")
+
+library(TxDb.Athaliana.BioMart.plantsmart28)
+Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
+
+ChIP_peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+ChIP_peak_GR <- loadPeakFile(ChIP_peak_path)
+ChIP_peak_GR$TF_id <- "AT1G28300"
+
+set.seed(20160806)
+findIT_TFHit(input_genes = input_genes,
+Txdb = Txdb,
+TF_GR_database = ChIP_peak_GR) -> result_findIT_TFHit
 
 }

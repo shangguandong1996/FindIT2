@@ -31,6 +31,11 @@ data.frame
 find influential TF of your input gene set based on public TF-Target data
 }
 \examples{
-#see in vignettes
+data("TF_target_database")
+data("input_genes")
+
+findIT_TTPair(input_genes = input_genes,
+TF_target_database = TF_target_database) ->result_findIT_TTPair
+
 
 }

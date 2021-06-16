@@ -34,5 +34,22 @@ findIT_MARA
 }
 \examples{
 
+data("ATAC_normCount")
+data("input_feature_id")
+
+peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
+peak_GR <- loadPeakFile(peak_path)
+
+ChIP_peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+ChIP_peak_GR <- loadPeakFile(ChIP_peak_path)
+ChIP_peak_GR$TF_id <- "AT1G28300"
+
+set.seed(20160806)
+
+findIT_MARA(input_feature_id = input_feature_id,
+peak_GR = peak_GR,
+peakScoreMt = ATAC_normCount,
+TF_GR_database = ChIP_peak_GR) -> result_findIT_MARA
+
 
 }
