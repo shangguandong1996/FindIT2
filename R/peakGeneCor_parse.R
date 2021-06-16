@@ -1,5 +1,5 @@
 utils::globalVariables(c("peakScore", "geneScore", "x", "y", "label",
-                         "time_point"))
+                         "time_point", "promoter_feature"))
 utils::globalVariables(c("cor", "pvalue"))
 
 #' plot_peakGeneCor
@@ -57,7 +57,7 @@ plot_peakGeneCor <- function(mmAnnoCor,
     geneScoreMt <- metadata(mmAnnoCor)$geneScoreMt
 
     if (!select_gene %in% rownames(geneScoreMt)) {
-        stop("the gene you select is not in your peakScoreMt",
+        stop("the gene you select is not in your geneScoreMt",
              call. = FALSE)
     }
     geneExpr <- geneScoreMt[select_gene, ]
@@ -89,9 +89,19 @@ plot_peakGeneCor <- function(mmAnnoCor,
         y = geneScore,
     )) +
         ggplot2::geom_point(alpha = 0.8) +
-        ggplot2::ggtitle(select_gene) +
         ggplot2::facet_wrap(~feature_id, scales = "free") +
         ggplot2::theme_bw()  -> p
+
+    if (metadata(mmAnnoCor)$mmCor_mode == "enhancerPromoterCor") {
+        select_promoter <- unique(select_df$promoter_feature)
+        p <- p +
+            ggplot2::labs(x = "enhancerScore",
+                          y = "promoterScore") +
+            ggplot2::ggtitle(paste0("gene: ", select_gene, "\n",
+                                    "promoter: ", select_promoter))
+    } else {
+        p <- p + ggplot2::ggtitle(select_gene)
+    }
 
     if (addLine) {
         p <- p +

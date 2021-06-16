@@ -523,14 +523,39 @@ shinyParse_peakGeneCor(mmAnnoCor)
 ## Calculate enhancer promoter correlation
 
 ```{r}
-enhancerPromoterCor(peak_GR = peak_GR[1:50],
+enhancerPromoterCor(peak_GR = peak_GR[1:100],
                     Txdb = Txdb,
                     peakScoreMt = ATAC_normCount,
                     up_scanPromoter = 500,
                     down_scanPromoter = 500,
                     up_scanEnhancer = 2000,
                     down_scanEnhacner = 2000,
-                    parallel = FALSE) -> mmAnnoCor_lineEP
+                    parallel = FALSE) -> mmAnnoCor_linkEP
+```
+
+```{r}
+plot_peakGeneCor(mmAnnoCor = mmAnnoCor_linkEP,
+                 select_gene = "AT5G01075") -> p
+
+p
+
+p$data$type <- gsub("_R[0-9]", "", p$data$time_point)
+p$data$type <- factor(p$data$type, levels = unique(p$data$type))
+
+p +
+    ggplot2::geom_point(aes(color = type))
+
+```
+
+```{r}
+# please pay attention that the number below should add 1
+# because I do not include nearest promoter into the result of enhancerPromoterCor
+plot_peakGeneAlias_summary(mmAnno = mmAnnoCor_linkEP,
+                           mmAnno_corFilter = subset(mmAnnoCor_linkEP, cor > 0.8))
+```
+
+```{r eval=FALSE}
+shinyParse_peakGeneCor(mmAnnoCor_linkEP)
 ```
 
 # Session info

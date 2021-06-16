@@ -70,7 +70,7 @@ peakGeneCor <- function(mmAnno,
         mmAnno_drop <- mmAnno[!left_index]
         msg <- paste("some gene_id or feature_id in your mmAnno is not in your",
                      "geneScoreMt or peakScore Mt,",
-                     "final cor and pvalue of these gene_id or feature_id pair will be NA")
+                     "final cor and pvalue of these gene_id or feature_id pair will be NA\n")
 
         warning(msg, call. = FALSE)
     } else {
@@ -285,6 +285,11 @@ enhancerPromoterCor <- function(peak_GR,
 
     metadata(mm_scan)$mm_promoter_tidy <- mm_promoter_tidy
     metadata(mm_scan)$peakScoreMt <- peakScoreMt
+
+    geneScoreMt <- peakScoreMt[mm_promoter_tidy$promoter_feature, ]
+    rownames(geneScoreMt) <- mm_promoter_tidy$gene_id
+    metadata(mm_scan)$geneScoreMt <- geneScoreMt
+
     metadata(mm_scan)$mmCor_mode <- "enhancerPromoterCor"
 
     return(mm_scan)
