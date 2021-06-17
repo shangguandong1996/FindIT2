@@ -17,37 +17,26 @@ utils::globalVariables(c("feature_id", "gene_id"))
 #' @export
 #'
 #' @examples
-#' library(TxDb.Athaliana.BioMart.plantsmart28)
-#' Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-#' seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
 #'
-#' peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
-#' peak_GR <- loadPeakFile(peak_path)
-#' peakAnno <- mm_nearestGene(peak_GR,Txdb)
-#' peakAnno
+#' if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+#'     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+#'     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
 #'
+#'     peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+#'     peak_GR <- loadPeakFile(peak_path)
+#'     peakAnno <- mm_nearestGene(peak_GR, Txdb)
+#'     peakAnno
+#' }
 mm_nearestGene <- function(peak_GR,
                            Txdb,
                            reportGeneInfo = FALSE,
                            ...) {
-    if ("mmAnno_mode" %in% names(metadata(peak_GR))) {
-        warning("it seems you have done mmAnno before, please not do again",
-                call. = FALSE
-        )
-        return(peak_GR)
-    }
 
-    if (!"feature_id" %in% colnames(mcols(peak_GR))) {
-        addfeatureIdSuggsesion()
-    }
-
-    # warning will appear firstly
-    withr::local_options(list(warn = 1))
-    check_seqlevel(peak_GR, Txdb)
-    peak_GR <- peak_GR[seqnames(peak_GR) %in% seqlevels(Txdb)]
+    peak_GR <- check_peakGR(peak_GR = peak_GR,
+                            Txdb = Txdb)
 
     cat("------------\n")
-    cat("annotatePeak using nearest gene mode begins\n")
+    cat("annotating Peak using nearest gene mode begins\n")
     cat(
         ">> preparing gene features information...\t\t",
         format(Sys.time(), "%Y-%m-%d %X"), "\n"
@@ -71,7 +60,7 @@ mm_nearestGene <- function(peak_GR,
 
     if (length(nearestHit) == 0) {
         stop("Sorry, there is no hits.",
-             call. = FALSE
+            call. = FALSE
         )
     }
 
@@ -105,8 +94,10 @@ mm_nearestGene <- function(peak_GR,
         # someone's peakN may be too big, in this case,
         # they may do not want full gene info
         # so they can save disk or memory
-        mcols(peak_GR) <- cbind(mcols(peak_GR),
-                                report_geneInfo(gene_location[gene_id]))
+        mcols(peak_GR) <- cbind(
+            mcols(peak_GR),
+            report_geneInfo(gene_location[gene_id])
+        )
         mcols(peak_GR)$distanceToTSS <- mcols(nearestHit)$distance * sign_1 * sign_2
     } else {
         mcols(peak_GR)$gene_id <- gene_id
@@ -141,35 +132,23 @@ mm_nearestGene <- function(peak_GR,
 #' @export
 #'
 #' @examples
-#' library(TxDb.Athaliana.BioMart.plantsmart28)
-#' Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-#' seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
-#' peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
-#' peak_GR <- loadPeakFile(peak_path)
-#' peakAnno <- mm_geneScan(peak_GR,Txdb)
-#' peakAnno
-#'
+#' if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+#'     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+#'     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
+#'     peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+#'     peak_GR <- loadPeakFile(peak_path)
+#'     peakAnno <- mm_geneScan(peak_GR, Txdb)
+#'     peakAnno
+#' }
 mm_geneScan <- function(peak_GR,
                         Txdb,
                         upstream = 3000,
                         downstream = 3000,
                         reportGeneInfo = FALSE,
                         ...) {
-    if ("mmAnno_mode" %in% names(peak_GR@metadata)) {
-        warning("it seems you have done mmAnno before, please not do again",
-                call. = FALSE
-        )
-        return(peak_GR)
-    }
 
-    if (!"feature_id" %in% colnames(mcols(peak_GR))) {
-        addfeatureIdSuggsesion()
-    }
-
-    # warning will appear firstly
-    withr::local_options(list(warn = 1))
-    check_seqlevel(peak_GR, Txdb)
-    peak_GR <- peak_GR[seqnames(peak_GR) %in% seqlevels(Txdb)]
+    peak_GR <- check_peakGR(peak_GR = peak_GR,
+                            Txdb = Txdb)
 
     cat("------------\n")
     cat("annotatePeak using geneScan mode begins\n")
@@ -181,13 +160,14 @@ mm_geneScan <- function(peak_GR,
     gene_start <- resize(gene_location, width = 1, fix = "start")
 
     gene_promoter <- suppressWarnings(promoters(gene_location,
-                                                               upstream = upstream,
-                                                               downstream = downstream
+        upstream = upstream,
+        downstream = downstream
     ))
 
-    if (all(is.na(seqinfo(Txdb)@seqlengths))) {
+    Txdb_seqlength <- seqlengths(Txdb)
+    if (all(is.na(Txdb_seqlength))) {
         warning("your chr length is not set, gene_promoter may cross bound",
-                call. = FALSE
+            call. = FALSE
         )
     } else {
         cat(
@@ -201,11 +181,9 @@ mm_geneScan <- function(peak_GR,
         ">> finding overlap peak in gene scan region...\t\t",
         format(Sys.time(), "%Y-%m-%d %X"), "\n"
     )
-    overlapHits <- suppressWarnings(findOverlaps(
-        gene_promoter,
-        peak_GR,
-        ...
-    ))
+    overlapHits <- suppressWarnings(
+        findOverlaps(gene_promoter,peak_GR,...)
+        )
 
     cat(
         ">> dealing with left peak not your gene scan region...\t\t",
@@ -219,10 +197,7 @@ mm_geneScan <- function(peak_GR,
 
     # if I use nearest, it will report 0 when no peak_GR left
     # so I use distanceToNearest
-    nearest_hit <- suppressWarnings(distanceToNearest(
-        peak_GR_left,
-        gene_start
-    ))
+    nearest_hit <- suppressWarnings(distanceToNearest(peak_GR_left,gene_start))
     gene_TSS_left <- gene_start[subjectHits(nearest_hit)]
 
     cat(
@@ -236,10 +211,7 @@ mm_geneScan <- function(peak_GR,
         ">> calculating distance and dealing with gene strand...\t\t",
         format(Sys.time(), "%Y-%m-%d %X"), "\n"
     )
-    dist <- suppressWarnings(distance(
-        final_peak_GR,
-        final_gene_GR
-    ))
+    dist <- suppressWarnings(distance(final_peak_GR,final_gene_GR))
 
     data.frame(
         start_dis = start(final_peak_GR) - start(final_gene_GR),
@@ -297,14 +269,14 @@ mm_geneScan <- function(peak_GR,
 #' @export
 #'
 #' @examples
-#' library(TxDb.Athaliana.BioMart.plantsmart28)
-#' Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-#' seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
-#' peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
-#' peak_GR <- loadPeakFile(peak_path)
-#' peak_pair <- mm_geneBound(peak_GR, Txdb, c("AT5G01015", "AT5G67570"))
-#' peak_pair
-#'
+#' if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+#'     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+#'     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
+#'     peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+#'     peak_GR <- loadPeakFile(peak_path)
+#'     peak_pair <- mm_geneBound(peak_GR, Txdb, c("AT5G01015", "AT5G67570"))
+#'     peak_pair
+#' }
 mm_geneBound <- function(peak_GR,
                          Txdb,
                          input_genes,
@@ -312,56 +284,76 @@ mm_geneBound <- function(peak_GR,
     # some genes maybe 12345……
     input_genes <- as.character(unique(input_genes))
 
-    if ("gene_id" %in% colnames(mcols(peak_GR))) {
-        mmAnno <- peak_GR
-    } else {
-        cat(
-            ">> using mm_nearestGene to annotate Peak...\t\t",
-            format(Sys.time(), "%Y-%m-%d %X"), "\n"
-        )
-        # https://stackoverflow.com/questions/34208564/how-to-hide-or-disable-in-function-printed-message
-        invisible(capture.output(mm_nearestGene(
-            peak_GR = peak_GR,
-            Txdb = Txdb,
-            reportGeneInfo = FALSE,
-            ...
-        ) -> mmAnno))
-    }
+    peak_GR <- quiet(check_peakGR(peak_GR = peak_GR,
+                                  Txdb = Txdb))
+    cat(
+        ">> using mm_nearestGene to annotate Peak...\t\t",
+        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+    )
+    mmAnno <- quiet(mm_nearestGene(peak_GR = peak_GR,
+                                   Txdb = Txdb,
+                                   reportGeneInfo = FALSE,...))
 
+
+
+    mmAnno$distanceToTSS_abs <- abs(mmAnno$distanceToTSS)
+    mmAnno_inputGenes <- mcols(subset(mmAnno, gene_id %in% input_genes))
+    mmAnno_inputGenes <- mmAnno_inputGenes[, c("feature_id", "gene_id", "distanceToTSS_abs")]
+    mmAnno_inputGenes <- tibble::tibble(data.frame(mmAnno_inputGenes,
+                                                   stringsAsFactors = FALSE))
 
     noPeakBind_genes <- input_genes[!input_genes %in% mmAnno$gene_id]
+
+    if (length(noPeakBind_genes) == 0) {
+        message("all your input gene have been annotated by nearestGene mode")
+        return(mmAnno_inputGenes)
+    }
 
     gene_location <- GenomicFeatures::genes(Txdb)
     all_genes <- gene_location$gene_id
 
-    mmAnno$distanceToTSS_abs <- abs(mmAnno$distanceToTSS)
-    mmAnno_inputGenes <- mcols(subset(mmAnno, gene_id %in% input_genes))[, c("feature_id", "gene_id", "distanceToTSS_abs")]
-    mmAnno_inputGenes <- data.frame(mmAnno_inputGenes, stringsAsFactors = FALSE)
-
-    if (length(noPeakBind_genes) == 0) {
-        message("It seems that all your input gene have been annotated",
-             call. = FALSE
-        )
-        return(mmAnno_inputGenes)
-
-
-    } else if (mean(noPeakBind_genes %in% all_genes) < 1) {
-        warning("some of your input genes is not in your Txdb\n",
+    withr::local_options(list(warn = 1))
+    if (mean(noPeakBind_genes %in% all_genes) < 1){
+        warning("some of your input genes is not in your Txdb, I filtered these gene\n",
                 call. = FALSE
         )
         noPeakBind_genes <- noPeakBind_genes[noPeakBind_genes %in% all_genes]
     }
 
-    cat(
-        ">> It seems that there", length(noPeakBind_genes), "genes do not have realted peak...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
-    )
+    peak_GR_Chr <- seqlevels(peak_GR)
+    gene_location_inChr <- gene_location[seqnames(gene_location) %in% peak_GR_Chr]
+    all_genes_inChr <- gene_location_inChr$gene_id
+
+    if (all(!input_genes %in% all_genes_inChr)){
+        stop("sorry, all of your input genes all not in your peak_GR chrosome",
+             call. = FALSE)
+    }
+
+    if (mean(noPeakBind_genes %in% all_genes_inChr) < 1){
+        noPeakBind_genes <- noPeakBind_genes[noPeakBind_genes %in% all_genes_inChr]
+
+        if (length(noPeakBind_genes) == 0){
+            msg <- paste0("some of your input gene are not in your peak_GR chrosome ",
+                          "and left all gene have been annotated in nearestGene mode\n")
+            warning(msg, call. = FALSE)
+            return(mmAnno_inputGenes)
+        } else {
+            msg <- paste0("some of your input gene are not in your peak_GR chrosome ",
+                          "I filtered these gene")
+            warning(msg, call. = FALSE)
+        }
+    }
+    msg <- paste0("It seems that there ",
+                  length(noPeakBind_genes),
+                  " genes have not been annotated by nearestGene mode")
+    message(msg)
+
 
     cat(
         ">> using distanceToNearest to find nearest peak of these genes...\t\t",
         format(Sys.time(), "%Y-%m-%d %X"), "\n"
     )
-    gene_start <- resize(gene_location, width = 1, fix = "start")
+    gene_start <- resize(gene_location_inChr, width = 1, fix = "start")
     gene_GR <- subset(gene_start, gene_id %in% noPeakBind_genes)
 
 
@@ -372,12 +364,11 @@ mm_geneBound <- function(peak_GR,
     ))
 
 
-    data.frame(
+    tibble::tibble(
         feature_id = peak_GR[subjectHits(nearestHit)]$feature_id,
         gene_id = gene_GR[queryHits(nearestHit)]$gene_id,
-        distanceToTSS_abs = mcols(nearestHit)$distance,
-        stringsAsFactors = FALSE
-    ) -> left_anno
+        distanceToTSS_abs = mcols(nearestHit)$distance
+        ) -> left_anno
 
     cat(
         ">> merging all anno...\t\t",
@@ -393,4 +384,28 @@ mm_geneBound <- function(peak_GR,
         format(Sys.time(), "%Y-%m-%d %X"), "\n"
     )
     return(final_anno)
+}
+
+
+check_peakGR <- function(peak_GR, Txdb){
+
+    # the otuput class of mm_nearestGene and mm_geneScan are all GRanges
+    # which can be input of function again and again
+    # so I write below to forbid
+    if ("mmAnno_mode" %in% names(metadata(peak_GR))) {
+        stop("it seems you have done mmAnno before, please not do again",
+             call. = FALSE
+        )
+        return(peak_GR)
+    }
+
+    # check peak GR with feature_id is most important in all analysis
+    check_colnames("feature_id", peak_GR)
+
+    # warning will appear firstly
+    withr::local_options(list(warn = 1))
+    check_seqlevel(peak_GR, Txdb)
+    peak_GR <- peak_GR[seqnames(peak_GR) %in% seqlevels(Txdb)]
+
+    return(peak_GR)
 }
