@@ -34,13 +34,16 @@ calculate regulatory potential using big wig files, which is useful for ATAC
 or H3K27ac histone modification data.
 }
 \examples{
-library(TxDb.Athaliana.BioMart.plantsmart28)
-Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
-bwFile <- system.file("extdata", "E50h_sampleChr5.bw", package = "FindIT2")
+if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+    Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+    seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
+    bwFile <- system.file("extdata", "E50h_sampleChr5.bw", package = "FindIT2")
 
-RP_df <- calcRP_coverage(bwFile = bwFile,
-                         Txdb = Txdb,
-                         Chrs_included = "Chr5")
+    RP_df <- calcRP_coverage(
+        bwFile = bwFile,
+        Txdb = Txdb,
+        Chrs_included = "Chr5"
+    )
 
+}
 }

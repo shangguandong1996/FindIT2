@@ -21,7 +21,8 @@ while the colnames are sample names}
 
 \item{Txdb}{Txdb}
 
-\item{Chrs_included}{chromosome where you want to calcluate gene RP in}
+\item{Chrs_included}{chromosome where you want to calculate gene RP in.
+If Chromosome is not be set, it will calculate gene RP in all chromosomes in Txdb.}
 
 \item{decay_dist}{decay distance}
 
@@ -37,23 +38,25 @@ which is useful for ATAC or H3K27ac histone modification data.
 }
 \examples{
 
-data("ATAC_normCount")
+if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+    data("ATAC_normCount")
+    library(SummarizedExperiment)
+    Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+    seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
 
-library(TxDb.Athaliana.BioMart.plantsmart28)
-library(SummarizedExperiment)
-Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
-peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
-peak_GR <- loadPeakFile(peak_path)
-mmAnno <- mm_geneScan(peak_GR,Txdb)
+    peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
+    peak_GR <- loadPeakFile(peak_path)
+    mmAnno <- mm_geneScan(peak_GR, Txdb)
 
-calcRP_region(mmAnno = mmAnno,
-              peakScoreMt = ATAC_normCount,
-              Txdb = Txdb,
-              Chrs_included = "Chr5") -> regionRP
+    calcRP_region(
+        mmAnno = mmAnno,
+        peakScoreMt = ATAC_normCount,
+        Txdb = Txdb,
+        Chrs_included = "Chr5"
+    ) -> regionRP
 
-sumRP <- assays(regionRP)$sumRP
-fullRP <- assays(regionRP)$fullRP
-
+    sumRP <- assays(regionRP)$sumRP
+    fullRP <- assays(regionRP)$fullRP
+}
 
 }

@@ -4,13 +4,7 @@
 \alias{calcRP_TFHit}
 \title{calcRP_TFHit}
 \usage{
-calcRP_TFHit(
-  mmAnno,
-  Txdb,
-  decay_dist = 1000,
-  consider_score = FALSE,
-  report_fullInfo = FALSE
-)
+calcRP_TFHit(mmAnno, Txdb, decay_dist = 1000, report_fullInfo = FALSE)
 }
 \arguments{
 \item{mmAnno}{the annotated GRange object from mm_geneScan}
@@ -18,8 +12,6 @@ calcRP_TFHit(
 \item{Txdb}{Txdb}
 
 \item{decay_dist}{decay distance}
-
-\item{consider_score}{whether you want to consider score in your feature_score column}
 
 \item{report_fullInfo}{whether you want to report full peak-RP-gene info}
 }
@@ -31,19 +23,27 @@ While FALSE, it will output data frame
 calculate regulatory potential based on ChIP-Seq peak data, which is useful
 for TF ChIP-seq data.
 }
+\details{
+If your origin peak_GR of mmAnno have column named feature_score, calcRP_TFHit
+will consider this column when calculating sumRP. Otherwise, it will consider
+all peak Hit feature_score is 1.
+}
 \examples{
-library(TxDb.Athaliana.BioMart.plantsmart28)
-Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
-peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
-peak_GR <- loadPeakFile(peak_path)
-mmAnno <- mm_geneScan(peak_GR,Txdb)
+if (require(TxDb.Athaliana.BioMart.plantsmart28)){
+    Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+    seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
+    peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+    peak_GR <- loadPeakFile(peak_path)
+    mmAnno <- mm_geneScan(peak_GR, Txdb)
 
-# if you just want to get RP_df, you can set report_fullInfo FALSE
-fullRP_hit <- calcRP_TFHit(mmAnno = mmAnno,
-                           Txdb = Txdb,
-                           report_fullInfo = TRUE)
+    # if you just want to get RP_df, you can set report_fullInfo FALSE
+    fullRP_hit <- calcRP_TFHit(
+        mmAnno = mmAnno,
+        Txdb = Txdb,
+        report_fullInfo = TRUE
+    )
 
-RP_df <- metadata(fullRP_hit)$peakRP_gene
+    RP_df <- metadata(fullRP_hit)$peakRP_gene
 
+}
 }

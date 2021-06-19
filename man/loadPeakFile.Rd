@@ -22,6 +22,6 @@ for later analysis
 read peak file and transform it into GRanges object
 }
 \examples{
-peakfile <- system.file("extdata", "ChIP.bed.gz", package = "MPMG")
+peakfile <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
 loadPeakFile(peakfile)
 }

@@ -18,15 +18,18 @@ utils::globalVariables(c("bw", "centerToTSS", "RP", "sumRP", "logRP", "normRP"))
 #' @return data.frame
 #' @export
 #' @examples
-#' library(TxDb.Athaliana.BioMart.plantsmart28)
-#' Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-#' seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
-#' bwFile <- system.file("extdata", "E50h_sampleChr5.bw", package = "FindIT2")
+#' if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+#'     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+#'     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
+#'     bwFile <- system.file("extdata", "E50h_sampleChr5.bw", package = "FindIT2")
 #'
-#' RP_df <- calcRP_coverage(bwFile = bwFile,
-#'                          Txdb = Txdb,
-#'                          Chrs_included = "Chr5")
+#'     RP_df <- calcRP_coverage(
+#'         bwFile = bwFile,
+#'         Txdb = Txdb,
+#'         Chrs_included = "Chr5"
+#'     )
 #'
+#' }
 calcRP_coverage <- function(bwFile,
                             Txdb,
                             gene_included,
@@ -49,18 +52,18 @@ calcRP_coverage <- function(bwFile,
 
     if (all(is.na(seqinfo(Txdb)@seqlengths))) {
         stop("your chr length is not set, scan region may cross bound. please set your chr length in Txdb",
-             call. = FALSE
+            call. = FALSE
         )
     }
 
     scan_region <- suppressWarnings(promoters(genes_GR,
-                                              upstream = scan_dist,
-                                              downstream = scan_dist + 1
+        upstream = scan_dist,
+        downstream = scan_dist + 1
     ))
 
     TSS_location <- resize(genes_GR,
-                           width = 1,
-                           fix = "start"
+        width = 1,
+        fix = "start"
     )
 
     cat(
@@ -83,8 +86,8 @@ calcRP_coverage <- function(bwFile,
         format(Sys.time(), "%Y-%m-%d %X"), "\n"
     )
     bwInfo <- rtracklayer::import(bwFile,
-                                  format = "Bigwig",
-                                  as = "RleList"
+        format = "Bigwig",
+        as = "RleList"
     )
 
     signal_list <- list()
@@ -97,7 +100,7 @@ calcRP_coverage <- function(bwFile,
         )
 
         scan_region_included <- scan_region[seqnames(scan_region) == Chr &
-                                                width(scan_region) == (2 * scan_dist + 1)]
+            width(scan_region) == (2 * scan_dist + 1)]
         view <- Views(bwInfo[Chr][[1]], ranges(scan_region_included))
         signal_Part1 <- viewApply(view, function(x) sum(as.numeric(x) * weight))
 
@@ -111,7 +114,7 @@ calcRP_coverage <- function(bwFile,
         # mean(value == viewApply(view, function(x) sum(as.numeric(x) * weight))[1:1000])
 
         scan_region_left <- scan_region[seqnames(scan_region) == Chr &
-                                            width(scan_region) < (2 * scan_dist + 1)]
+            width(scan_region) < (2 * scan_dist + 1)]
 
         if (length(scan_region_left) > 0) {
             cat(
@@ -186,7 +189,8 @@ calcRP_coverage <- function(bwFile,
 #' @param peakScoreMt peak count matrix. The rownames are feature_id in mmAnno,
 #' while the colnames are sample names
 #' @param Txdb Txdb
-#' @param Chrs_included chromosome where you want to calcluate gene RP in
+#' @param Chrs_included chromosome where you want to calculate gene RP in.
+#' If Chromosome is not be set, it will calculate gene RP in all chromosomes in Txdb.
 #' @param decay_dist decay distance
 #' @param log_transform whether you want to log and norm your RP
 #'
@@ -196,24 +200,26 @@ calcRP_coverage <- function(bwFile,
 #'
 #' @examples
 #'
-#' data("ATAC_normCount")
+#' if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+#'     data("ATAC_normCount")
+#'     library(SummarizedExperiment)
+#'     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+#'     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
 #'
-#' library(TxDb.Athaliana.BioMart.plantsmart28)
-#' library(SummarizedExperiment)
-#' Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-#' seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
-#' peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
-#' peak_GR <- loadPeakFile(peak_path)
-#' mmAnno <- mm_geneScan(peak_GR,Txdb)
+#'     peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
+#'     peak_GR <- loadPeakFile(peak_path)
+#'     mmAnno <- mm_geneScan(peak_GR, Txdb)
 #'
-#' calcRP_region(mmAnno = mmAnno,
-#'               peakScoreMt = ATAC_normCount,
-#'               Txdb = Txdb,
-#'               Chrs_included = "Chr5") -> regionRP
+#'     calcRP_region(
+#'         mmAnno = mmAnno,
+#'         peakScoreMt = ATAC_normCount,
+#'         Txdb = Txdb,
+#'         Chrs_included = "Chr5"
+#'     ) -> regionRP
 #'
-#' sumRP <- assays(regionRP)$sumRP
-#' fullRP <- assays(regionRP)$fullRP
-#'
+#'     sumRP <- assays(regionRP)$sumRP
+#'     fullRP <- assays(regionRP)$fullRP
+#' }
 #'
 calcRP_region <- function(mmAnno,
                           peakScoreMt,
@@ -221,8 +227,6 @@ calcRP_region <- function(mmAnno,
                           Chrs_included,
                           decay_dist = 1e3,
                           log_transform = FALSE) {
-
-    # add simplify parameter
 
     check_parameter_length(mmAnno, decay_dist)
 
@@ -233,8 +237,8 @@ calcRP_region <- function(mmAnno,
     # names(peak_GR) <- peak_GR$feature_id
     # peak_scaned <- peak_GR[scan_result$feature_id]
     peak_scaned_center <- GenomicRanges::resize(mmAnno,
-                                                width = 1,
-                                                fix = "center"
+        width = 1,
+        fix = "center"
     )
 
     if (missing(Chrs_included)) {
@@ -246,8 +250,8 @@ calcRP_region <- function(mmAnno,
 
     gene_scaned <- all_gene_location[mmAnno$gene_id]
     gene_scaned_TSS <- GenomicRanges::resize(gene_scaned,
-                                             width = 1,
-                                             fix = "start"
+        width = 1,
+        fix = "start"
     )
 
     mmAnno$centerToTSS <- GenomicRanges::distance(peak_scaned_center, gene_scaned_TSS)
@@ -262,7 +266,7 @@ calcRP_region <- function(mmAnno,
     geneAll <- all_gene_location$gene_id
     noRPGene <- geneAll[!geneAll %in% unique(mmAnno$gene_id)]
     cat(
-        ">> filling", length(noRPGene), "noAssoc peak gene's RP with 0...\t\t",
+        ">> pre-filling", length(noRPGene), "noAssoc peak gene's RP with 0...\t\t",
         format(Sys.time(), "%Y-%m-%d %X"), "\n"
     )
     noRPGene_df <- data.frame(
@@ -319,6 +323,8 @@ calcRP_region <- function(mmAnno,
             # Qin, Q. et al. (2020). Lisa: inferring transcriptional regulators through integrative modeling of public chromatin accessibility and ChIP-seq data. Genome Biol 21, 32.
             # Methos:Preprocessing of chromatin profiles
 
+            # log norm can help you find high RP gene in several samples or
+
             calc_result %>%
                 dplyr::mutate(logRP = log(sumRP + 1)) %>%
                 # which makes normRP has meaning
@@ -338,6 +344,8 @@ calcRP_region <- function(mmAnno,
             # this idea is from
             # Wang, S. et al. (2016). Modeling cis-regulation with a compendium of genome-wide histone H3K27ac profiles. Genome Res. 26, 1417–1429.
             # Fig.2B
+
+            # no log norm RP is suitable for latter analysis, like findIT
 
             calc_result %>%
                 dplyr::ungroup() %>%
@@ -390,106 +398,82 @@ calcRP_region <- function(mmAnno,
 #' @param mmAnno the annotated GRange object from mm_geneScan
 #' @param Txdb Txdb
 #' @param decay_dist decay distance
-#' @param consider_score whether you want to consider score in your feature_score column
 #' @param report_fullInfo whether you want to report full peak-RP-gene info
 #'
 #' @return if report_fullInfo is TRUE, it will output GRanges with detailed info.
 #' While FALSE, it will output data frame
 #' @export
 #'
+#' @details
+#' If your origin peak_GR of mmAnno have column named feature_score, calcRP_TFHit
+#' will consider this column when calculating sumRP. Otherwise, it will consider
+#' all peak Hit feature_score is 1.
+#'
 #' @examples
-#' library(TxDb.Athaliana.BioMart.plantsmart28)
-#' Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-#' seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
-#' peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
-#' peak_GR <- loadPeakFile(peak_path)
-#' mmAnno <- mm_geneScan(peak_GR,Txdb)
+#' if (require(TxDb.Athaliana.BioMart.plantsmart28)){
+#'     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+#'     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
+#'     peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+#'     peak_GR <- loadPeakFile(peak_path)
+#'     mmAnno <- mm_geneScan(peak_GR, Txdb)
 #'
-#' # if you just want to get RP_df, you can set report_fullInfo FALSE
-#' fullRP_hit <- calcRP_TFHit(mmAnno = mmAnno,
-#'                            Txdb = Txdb,
-#'                            report_fullInfo = TRUE)
+#'     # if you just want to get RP_df, you can set report_fullInfo FALSE
+#'     fullRP_hit <- calcRP_TFHit(
+#'         mmAnno = mmAnno,
+#'         Txdb = Txdb,
+#'         report_fullInfo = TRUE
+#'     )
 #'
-#' RP_df <- metadata(fullRP_hit)$peakRP_gene
+#'     RP_df <- metadata(fullRP_hit)$peakRP_gene
 #'
+#' }
 calcRP_TFHit <- function(mmAnno,
                          Txdb,
                          decay_dist = 1000,
-                         consider_score = FALSE,
                          report_fullInfo = FALSE) {
     check_parameter_length(mmAnno, decay_dist)
 
-    # The user should decide Classify promoter or enhancer by themselve
-    # instead of me
-
-    # if (!skipClassify) {
-    #   mm_nearestGene(peak_GR = peak_GR,
-    #                  Txdb = Txdb) -> mm_anno
-    #
-    #
-    #   peakN <- nrow(mm_anno)
-    #   mm_anno_order <- mm_anno[order(mm_anno$feature_score, decreasing = TRUE), ]
-    #
-    #   top_p20_dist <- abs(mm_anno_order[seq_len(peakN * 0.2), ]$distanceToTSS)
-    #   top_p50_dist <- abs(mm_anno_order[seq_len(peakN * 0.5), ]$distanceToTSS)
-    #   all_dist <- abs(mm_anno_order$distanceToTSS)
-    #
-    #   c(mean(top_p20_dist < classify_cutoff),
-    #     mean(top_p50_dist < classify_cutoff),
-    #     mean(all_dist < classify_cutoff)) -> cutoff_percent
-    #
-    #   percent_info <- paste0(round(cutoff_percent * 100, 2), "%")
-    #
-    #   print("selecting top 20%, top50% and all peaks to check their distanceToTSS\n")
-    #   print(paste0("The respective percent of test peaks sets which located in the cutoff region are ",
-    #                paste(percent_info, collapse = " "), "\n"))
-    #   if(any(cutoff_percent > 0.2)) {
-    #     print(paste0("at least one test peak set is more than 20%, ",
-    #                  "So I prefer to believe this TF is promoter-type\n"))
-    #     decay_dist <- decayDist_promoter
-    #     print(paste0("The decayDist is decided by decayDist_promoter, which is ",
-    #                  decayDist_promoter,
-    #                  "\n"))
-    #   } else {
-    #     print(paste0("No test peak set is more than 20%, ",
-    #                  "So I prefer to believe this TF is enhancer-type\n"))
-    #     decay_dist <- decayDist_enhancer
-    #     print(paste0("The decayDist is decided by decayDist_enhancer, which is ",
-    #                  decayDist_enhancer,
-    #                  "\n"))
-    #   }
-    #
-    # } else {
-    #   print(paste0("skipping the skipClassify steps..., ",
-    #                "the decayDist is decided by decayDist_promoter, which is ",
-    #                decayDist_promoter,
-    #                "\n"))
-    #   decay_dist <- decayDist_promoter
-    # }
+    cat(
+        "\n>> calculating peakCenter to TSS using peak-gene pair...\t\t",
+        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+    )
 
     peak_scaned_center <- GenomicRanges::resize(mmAnno,
-                                                width = 1,
-                                                fix = "center"
+        width = 1,
+        fix = "center"
     )
 
     all_gene_location <- GenomicFeatures::genes(Txdb)
 
     gene_scaned <- all_gene_location[mmAnno$gene_id]
     gene_scaned_TSS <- GenomicRanges::resize(gene_scaned,
-                                             width = 1,
-                                             fix = "start"
+        width = 1,
+        fix = "start"
     )
 
     mmAnno$centerToTSS <- GenomicRanges::distance(peak_scaned_center, gene_scaned_TSS)
 
     scan_result <- as.data.frame(mmAnno)
 
-    if (consider_score) {
+
+    if ("feature_score" %in% colnames(mcols(mmAnno))) {
+        cat(
+            ">> calculating RP using centerToTSS and feature_score\t\t",
+            format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        )
         mmAnno$RP <- mmAnno$feature_score * 2^(-mmAnno$centerToTSS / decay_dist)
     } else {
+        cat(
+            ">> calculating RP using centerToTSS and TF hit\t\t",
+            format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        )
         mmAnno$RP <- 2^(-mmAnno$centerToTSS / decay_dist)
     }
 
+    cat(
+        ">> merging all info together\t\t",
+        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+    )
     mcols(mmAnno) %>%
         data.frame(stringsAsFactors = FALSE) %>%
         dplyr::group_by(gene_id) %>%
@@ -500,6 +484,11 @@ calcRP_TFHit <- function(mmAnno,
         dplyr::arrange(-sumRP) %>%
         dplyr::mutate(RP_rank = rank(-sumRP)) -> peakRP_gene
 
+    cat(
+        ">> done\t\t",
+        format(Sys.time(), "%Y-%m-%d %X"), "\n\n"
+    )
+
     if (report_fullInfo) {
         metadata(mmAnno)$peakRP_gene <- peakRP_gene
         return(mmAnno)
@@ -507,5 +496,4 @@ calcRP_TFHit <- function(mmAnno,
         return(peakRP_gene)
     }
 
-    return(mmAnno)
 }

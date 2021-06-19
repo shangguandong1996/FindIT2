@@ -12,11 +12,11 @@
 #' @export
 #'
 #' @examples
-#' peakfile <- system.file("extdata", "ChIP.bed.gz", package = "MPMG")
+#' peakfile <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
 #' loadPeakFile(peakfile)
 loadPeakFile <- function(filePath,
-                         fromMACS2 = FALSE,
-                         narrowPeak = TRUE) {
+    fromMACS2 = FALSE,
+    narrowPeak = TRUE) {
     if (fromMACS2) {
         if (narrowPeak) {
             # This idea is from
@@ -30,8 +30,6 @@ loadPeakFile <- function(filePath,
                 format = "BED",
                 extraCols = extraCols
             )
-            colnames(S4Vectors::mcols(peak_GR))[1] <- "feature_id"
-            return(peak_GR)
         } else {
             extraCols <- c(
                 Fold = "numeric", pValue = "numeric",
@@ -42,12 +40,10 @@ loadPeakFile <- function(filePath,
                 format = "BED",
                 extraCols = extraCols
             )
-            colnames(S4Vectors::mcols(peak_GR))[1] <- "feature_id"
-            return(peak_GR)
         }
     } else {
         peak_GR <- rtracklayer::import(con = filePath)
-        colnames(S4Vectors::mcols(peak_GR))[1] <- "feature_id"
-        return(peak_GR)
     }
+    colnames(S4Vectors::mcols(peak_GR))[1] <- "feature_id"
+    return(peak_GR)
 }
