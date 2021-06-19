@@ -1,8 +1,12 @@
 utils::globalVariables(c("N", "freqNumber"))
-utils::globalVariables(c("abs_dist", "distanceToTSS", "xpos", "ypos",
-                         "hjustvar", "vjustvar", "annotateText"))
-utils::globalVariables(c("N", "freq", "xpos", "annotateText",
-                         "ypos", "xend", "yend"))
+utils::globalVariables(c(
+    "abs_dist", "distanceToTSS", "xpos", "ypos",
+    "hjustvar", "vjustvar", "annotateText"
+))
+utils::globalVariables(c(
+    "N", "freq", "xpos", "annotateText",
+    "ypos", "xend", "yend"
+))
 #' getAssocPairNumber
 #'
 #' get associated peak number of gene and vice verse.
@@ -18,19 +22,21 @@ utils::globalVariables(c("N", "freq", "xpos", "annotateText",
 #' @export
 #'
 #' @examples
-#' library(TxDb.Athaliana.BioMart.plantsmart28)
-#' Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-#' seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
+#' if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+#'     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+#'     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
 #'
-#' peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
-#' peak_GR <- loadPeakFile(peak_path)
-#' peakAnno <- mm_nearestGene(peak_GR,Txdb)
+#'     peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+#'     peak_GR <- loadPeakFile(peak_path)
+#'     peakAnno <- mm_nearestGene(peak_GR, Txdb)
 #'
-#' getAssocPairNumber(peakAnno)
+#'     getAssocPairNumber(peakAnno)
 #'
+#' }
 getAssocPairNumber <- function(mmAnno,
                                output_type = "gene_id",
                                output_summary = FALSE) {
+
     type <- match.arg(output_type, c("feature_id", "gene_id"))
 
     if (type == "gene_id") {
@@ -44,7 +50,7 @@ getAssocPairNumber <- function(mmAnno,
         dplyr::group_by(!!sym(type)) %>%
         dplyr::summarise(!!sym(colName) := dplyr::n()) %>%
         dplyr::mutate(!!sym(type) := stringr::str_sort(!!sym(type),
-                                                       numeric = TRUE
+            numeric = TRUE
         )) -> pairNumber
 
     freqName <- gsub("_id", "_freq", type)
@@ -87,21 +93,23 @@ getAssocPairNumber <- function(mmAnno,
 #' @export
 #'
 #' @examples
-#' library(TxDb.Athaliana.BioMart.plantsmart28)
-#' Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-#' seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
+#' if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+#'     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+#'     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
 #'
-#' peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
-#' peak_GR <- loadPeakFile(peak_path)
-#' peakAnno <- mm_nearestGene(peak_GR,Txdb)
-#' plot_annoDistance(peakAnno)
+#'     peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+#'     peak_GR <- loadPeakFile(peak_path)
+#'     peakAnno <- mm_nearestGene(peak_GR, Txdb)
+#'     plot_annoDistance(peakAnno)
 #'
+#' }
 plot_annoDistance <- function(mmAnno,
                               quantile = c(0.01, 0.99)) {
 
-    if (metadata(mmAnno)$mmAnno_mode != "nearestGene"){
+    if (metadata(mmAnno)$mmAnno_mode != "nearestGene") {
         stop("sorry, it only accept mmAnno from mm_nearestGene",
-             call. = FALSE)
+            call. = FALSE
+        )
     }
 
     # TODO: maybe I can take suggestion from
@@ -110,8 +118,8 @@ plot_annoDistance <- function(mmAnno,
     mmAnno$abs_dist <- abs(mmAnno$distanceToTSS) + 1
     summary_value <- summary(mmAnno$abs_dist) - 1
     paste(names(summary_value), ": ",
-          round(summary_value, digits = 2), "  ",
-          collapse = "\n"
+        round(summary_value, digits = 2), "  ",
+        collapse = "\n"
     ) -> annotate_text
 
     annotate_text <- paste0(
@@ -124,7 +132,8 @@ plot_annoDistance <- function(mmAnno,
         ggplot2::scale_x_log10() +
         ggplot2::theme_bw() +
         ggplot2::xlab("abs(distanceToTSS) + 1") +
-        ggplot2::annotate("text", x = Inf, y = Inf, label = annotate_text, vjust = 1, hjust = 1) -> p1
+        ggplot2::annotate("text", x = Inf, y = Inf, label = annotate_text,
+                          vjust = 1, hjust = 1) -> p1
 
 
     quantile_value <- quantile(mmAnno$distanceToTSS, quantile)
@@ -136,8 +145,8 @@ plot_annoDistance <- function(mmAnno,
 
     summary_value <- summary(mmAnno$distanceToTSS)
     paste(names(summary_value), ": ",
-          round(summary_value, digits = 2), "  ",
-          collapse = "\n"
+        round(summary_value, digits = 2), "  ",
+        collapse = "\n"
     ) -> annotate_text
 
     annotate_text <- paste0(
@@ -169,7 +178,7 @@ plot_annoDistance <- function(mmAnno,
             label = annotateText
         )) -> p2
 
-    #https://github.com/thomasp85/patchwork/issues/246
+    # https://github.com/thomasp85/patchwork/issues/246
     # for the patchwork operator
     p1 / p2
 }
@@ -193,23 +202,21 @@ plot_annoDistance <- function(mmAnno,
 #' @export
 #'
 #' @examples
-#' library(TxDb.Athaliana.BioMart.plantsmart28)
-#' Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-#' seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
+#' if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+#'     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+#'     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
 #'
-#' peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
-#' peak_GR <- loadPeakFile(peak_path)
-#' peakAnno <- mm_nearestGene(peak_GR,Txdb)
+#'     peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+#'     peak_GR <- loadPeakFile(peak_path)
+#'     peakAnno <- mm_nearestGene(peak_GR, Txdb)
 #'
-#' plot_peakGeneAlias_summary(peakAnno)
+#'     plot_peakGeneAlias_summary(peakAnno)
 #'
+#' }
 plot_peakGeneAlias_summary <- function(mmAnno,
                                        mmAnno_corFilter = NULL,
                                        output_type = "gene_id",
                                        fillColor = "#ca6b67") {
-    # TODO:you have to deal with nearest gene Cor plot
-    # which each peak only has one gene
-
 
     if (output_type == "gene_id") {
         ylabs <- paste0("The freq of each gene has N peak")
@@ -239,10 +246,12 @@ plot_peakGeneAlias_summary <- function(mmAnno,
     }
 
 
-    if (is.null(mmAnno_corFilter)){
+    if (is.null(mmAnno_corFilter)) {
         ggplot2::ggplot(summary, aes(x = N, y = freq)) +
-            ggplot2::geom_bar(stat = "identity", color = "black",
-                              fill = fillColor) +
+            ggplot2::geom_bar(
+                stat = "identity", color = "black",
+                fill = fillColor
+            ) +
             ggplot2::geom_text(aes(label = abs(freq), y = freq)) +
             ggplot2::ylab(ylabs) +
             ggplot2::coord_flip() -> p
@@ -252,15 +261,15 @@ plot_peakGeneAlias_summary <- function(mmAnno,
         ggplot2::ggplot(summary, aes(x = N, y = freq)) +
             ggplot2::geom_bar(stat = "identity", color = "black") +
             ggplot2::geom_text(aes(label = abs(freq), y = freq),
-                               hjust = 1.1
+                hjust = 1.1
             ) +
             ggplot2::geom_bar(
                 data = summary_filter,
                 stat = "identity", fill = fillColor, color = "black"
             ) +
             ggplot2::geom_text(aes(label = freq, y = freq),
-                               data = summary_filter, color = "black",
-                               hjust = -0.1
+                data = summary_filter, color = "black",
+                hjust = -0.1
             ) +
             ggplot2::scale_y_continuous(
                 labels = abs,

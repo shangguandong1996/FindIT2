@@ -19,13 +19,14 @@ plot the distance distribution of mmAnno from mm_nearestGene, which helps you
 decide whehter your TF is promoter or enhancer dominant
 }
 \examples{
-library(TxDb.Athaliana.BioMart.plantsmart28)
-Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
+if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+    Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+    seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
 
-peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
-peak_GR <- loadPeakFile(peak_path)
-peakAnno <- mm_nearestGene(peak_GR,Txdb)
-plot_annoDistance(peakAnno)
+    peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+    peak_GR <- loadPeakFile(peak_path)
+    peakAnno <- mm_nearestGene(peak_GR, Txdb)
+    plot_annoDistance(peakAnno)
 
+}
 }
