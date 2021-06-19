@@ -94,7 +94,7 @@ test_that("findIT enrich In All test", {
         TF_GR_database = ChIP_peak_GR
     ) -> result_findIT_enrichInAll)
 
-    expect_equal(result_findIT_enrichInAll$inputRatio[1], "64/79")
+    expect_equal(result_findIT_enrichInAll$inputRatio[1], "64/77")
     expect_equal(is.na(result_findIT_enrichInAll$qvalue[1]), TRUE)
 })
 
