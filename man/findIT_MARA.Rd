@@ -10,7 +10,8 @@ findIT_MARA(
   peakScoreMt,
   TF_GR_database,
   log = TRUE,
-  meanScale = TRUE
+  meanScale = TRUE,
+  output = "coef"
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ findIT_MARA(
 \item{log}{whether you want to log your peakScoreMt}
 
 \item{meanScale}{whether you want to mean-centered per row}
+
+\item{output}{one of 'coef' and 'cor'. Default is coef}
 }
 \value{
 a data.frame
@@ -46,10 +49,11 @@ ChIP_peak_GR$TF_id <- "AT1G28300"
 
 set.seed(20160806)
 
-findIT_MARA(input_feature_id = input_feature_id,
-peak_GR = peak_GR,
-peakScoreMt = ATAC_normCount,
-TF_GR_database = ChIP_peak_GR) -> result_findIT_MARA
-
+findIT_MARA(
+    input_feature_id = input_feature_id,
+    peak_GR = peak_GR,
+    peakScoreMt = ATAC_normCount,
+    TF_GR_database = ChIP_peak_GR
+) -> result_findIT_MARA
 
 }
