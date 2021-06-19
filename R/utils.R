@@ -97,6 +97,19 @@ check_colnames <- function(colnames,
     }
 }
 
+check_duplicated <- function(peak_GR){
+    N <- length(peak_GR)
+    feature_id_N <- length(unique(peak_GR$feature_id))
+    if (feature_id_N < N){
+        msg <- paste0(
+            "sorry, it seems that your peak_GR have duplicated feature_id. ",
+            "please de-duplicated your peak_GR"
+        )
+        stop(msg, call. = FALSE)
+    }
+}
+
+
 utils::globalVariables(c("tmp_start", "tmp_end", "gene_id"))
 #' @importFrom magrittr %>%
 report_geneInfo <- function(gene_GR) {

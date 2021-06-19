@@ -184,6 +184,9 @@ enhancerPromoterCor <- function(peak_GR,
                                 peakScoreMt,
                                 parallel = FALSE) {
 
+    peak_GR <- check_peakGR(peak_GR = peak_GR, Txdb = Txdb)
+    check_duplicated(peak_GR)
+
     cat(
         ">> using scanPromoter parameter to scan promoter for each gene...\t\t",
         format(Sys.time(), "%Y-%m-%d %X"), "\n"

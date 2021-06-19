@@ -34,6 +34,7 @@ mm_nearestGene <- function(peak_GR,
 
     peak_GR <- check_peakGR(peak_GR = peak_GR,
                             Txdb = Txdb)
+    check_duplicated(peak_GR)
 
     cat("------------\n")
     cat("annotating Peak using nearest gene mode begins\n")
@@ -149,6 +150,7 @@ mm_geneScan <- function(peak_GR,
 
     peak_GR <- check_peakGR(peak_GR = peak_GR,
                             Txdb = Txdb)
+    check_duplicated(peak_GR)
 
     cat("------------\n")
     cat("annotatePeak using geneScan mode begins\n")
@@ -286,6 +288,8 @@ mm_geneBound <- function(peak_GR,
 
     peak_GR <- quiet(check_peakGR(peak_GR = peak_GR,
                                   Txdb = Txdb))
+    check_duplicated(peak_GR)
+
     cat(
         ">> using mm_nearestGene to annotate Peak...\t\t",
         format(Sys.time(), "%Y-%m-%d %X"), "\n"
