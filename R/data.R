@@ -86,7 +86,7 @@
 #'         Txdb = Txdb,
 #'         input_genes = input_genes
 #'     )
-#'     input_feature_id <- related_peaks$feature_id
+#'     input_feature_id <- unique(related_peaks$feature_id)
 #'     # save(input_genes, file = "data/input_genes.rda", version = 2)
 #'     # save(input_feature_id, file = "data/input_feature_id.rda", version = 2)
 #' }

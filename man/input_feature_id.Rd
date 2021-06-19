@@ -14,6 +14,6 @@ data(input_feature_id)
 input_feature_id
 }
 \details{
-for the detailed progress producing input_feature_id, you can see data(input_genes)
+For the detailed progress producing input_feature_id, you can see data(input_genes)
 }
 \keyword{datasets}
