@@ -13,41 +13,7 @@ data(input_feature_id)
 \description{
 input_feature_id
 }
-\examples{
-\dontrun{
-library(FindIT2)
-library(TxDb.Athaliana.BioMart.plantsmart28)
-Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
-ChIP_peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
-ChIP_peak_GR <- loadPeakFile(ChIP_peak_path)
-ATAC_peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
-ATAC_peak_GR <- loadPeakFile(ATAC_peak_path)
-
-mmAnno_geneScan <- mm_geneScan(peak_GR = ChIP_peak_GR,
-                               Txdb = Txdb,
-                               upstream = 2e4,
-                               downstream = 2e4)
-
-peakRP_gene <- calcRP_TFHit(mmAnno = mmAnno_geneScan,
-                            Txdb = Txdb,
-                            report_fullInfo = FALSE)
-
-data("RNADiff_LEC2_GR")
-integrate_ChIP_RNA(result_geneRP = peakRP_gene,
-result_geneDiff = RNADiff_LEC2_GR) -> merge_result
-
-target_result <- merge_result$data
-input_genes <- target_result$gene_id[1:50]
-
-related_peaks <- mm_geneBound(peak_GR = ATAC_peak_GR,
-                              Txdb = Txdb,
-                              input_genes = input_genes)
-input_feature_id <- related_peaks$feature_id
-#save(input_genes, file = "data/input_genes.rda", version = 2)
-#save(input_feature_id, file = "data/input_feature_id.rda", version = 2)
-}
-
-
+\details{
+for the detailed progress producing input_feature_id, you can see data(input_genes)
 }
 \keyword{datasets}
