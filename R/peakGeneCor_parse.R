@@ -1,5 +1,7 @@
-utils::globalVariables(c("peakScore", "geneScore", "x", "y", "label",
-                         "time_point", "promoter_feature"))
+utils::globalVariables(c(
+    "peakScore", "geneScore", "x", "y", "label",
+    "time_point", "promoter_feature"
+))
 utils::globalVariables(c("cor", "pvalue"))
 
 #' plot_peakGeneCor
@@ -20,45 +22,49 @@ utils::globalVariables(c("cor", "pvalue"))
 #' @export
 #'
 #' @examples
-#' data("RNA_normCount")
-#' data("ATAC_normCount")
 #'
-#' library(TxDb.Athaliana.BioMart.plantsmart28)
-#' Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-#' seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
-#' peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
-#' peak_GR <- loadPeakFile(peak_path)[1:100]
-#' mmAnno <- mm_geneScan(peak_GR,Txdb)
+#' if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+#'     data("RNA_normCount")
+#'     data("ATAC_normCount")
+#'     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+#'     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
+#'     peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
+#'     peak_GR <- loadPeakFile(peak_path)[1:100]
+#'     mmAnno <- mm_geneScan(peak_GR, Txdb)
 #'
-#' ATAC_colData <- data.frame(row.names = colnames(ATAC_normCount),
-#'                            type = gsub("_R[0-9]", "", colnames(ATAC_normCount))
-#'                            )
+#'     ATAC_colData <- data.frame(
+#'         row.names = colnames(ATAC_normCount),
+#'         type = gsub("_R[0-9]", "", colnames(ATAC_normCount))
+#'     )
 #'
-#' integrate_replicates(ATAC_normCount, ATAC_colData) -> ATAC_normCount_merge
-#' RNA_colData <- data.frame(row.names = colnames(RNA_normCount),
-#'                           type = gsub("_R[0-9]", "", colnames(RNA_normCount))
-#'                           )
-#' integrate_replicates(RNA_normCount, RNA_colData) -> RNA_normCount_merge
-#' peakGeneCor(mmAnno = mmAnno,
-#'             peakScoreMt = ATAC_normCount_merge,
-#'             geneScoreMt = RNA_normCount_merge,
-#'             parallel = FALSE) -> mmAnnoCor
+#'     integrate_replicates(ATAC_normCount, ATAC_colData) -> ATAC_normCount_merge
+#'     RNA_colData <- data.frame(
+#'         row.names = colnames(RNA_normCount),
+#'         type = gsub("_R[0-9]", "", colnames(RNA_normCount))
+#'     )
+#'     integrate_replicates(RNA_normCount, RNA_colData) -> RNA_normCount_merge
+#'     peakGeneCor(
+#'         mmAnno = mmAnno,
+#'         peakScoreMt = ATAC_normCount_merge,
+#'         geneScoreMt = RNA_normCount_merge,
+#'         parallel = FALSE
+#'     ) -> mmAnnoCor
 #'
-#' plot_peakGeneCor(mmAnnoCor, select_gene = "AT5G01010")
+#'     plot_peakGeneCor(mmAnnoCor, select_gene = "AT5G01010")
 #'
-#'
+#' }
 plot_peakGeneCor <- function(mmAnnoCor,
                              select_gene,
                              addLine = TRUE,
                              addFullInfo = TRUE,
                              sigShow = "pvalue") {
-
     peakScoreMt <- metadata(mmAnnoCor)$peakScoreMt
     geneScoreMt <- metadata(mmAnnoCor)$geneScoreMt
 
     if (!select_gene %in% rownames(geneScoreMt)) {
         stop("the gene you select is not in your geneScoreMt",
-             call. = FALSE)
+            call. = FALSE
+        )
     }
     geneExpr <- geneScoreMt[select_gene, ]
 
@@ -75,9 +81,12 @@ plot_peakGeneCor <- function(mmAnnoCor,
             names_to = "time_point",
             values_to = "peakScore"
         ) %>%
-        mutate(time_point = factor(time_point,
-                                   levels = unique(colnames(peakScoreMt))),
-               geneScore = rep(geneExpr, feature_N)) -> peak_gene_score
+        mutate(
+            time_point = factor(time_point,
+                levels = unique(colnames(peakScoreMt))
+            ),
+            geneScore = rep(geneExpr, feature_N)
+        ) -> peak_gene_score
 
     plot_data <- inner_join(
         peak_gene_score,
@@ -90,15 +99,19 @@ plot_peakGeneCor <- function(mmAnnoCor,
     )) +
         ggplot2::geom_point(alpha = 0.8) +
         ggplot2::facet_wrap(~feature_id, scales = "free") +
-        ggplot2::theme_bw()  -> p
+        ggplot2::theme_bw() -> p
 
     if (metadata(mmAnnoCor)$mmCor_mode == "enhancerPromoterCor") {
         select_promoter <- unique(select_df$promoter_feature)
         p <- p +
-            ggplot2::labs(x = "enhancerScore",
-                          y = "promoterScore") +
-            ggplot2::ggtitle(paste0("gene: ", select_gene, "\n",
-                                    "promoter: ", select_promoter))
+            ggplot2::labs(
+                x = "enhancerScore",
+                y = "promoterScore"
+            ) +
+            ggplot2::ggtitle(paste0(
+                "gene: ", select_gene, "\n",
+                "promoter: ", select_promoter
+            ))
     } else {
         p <- p + ggplot2::ggtitle(select_gene)
     }
@@ -116,22 +129,24 @@ plot_peakGeneCor <- function(mmAnnoCor,
         plot_data %>%
             group_by(feature_id) %>%
             summarise(
-                y = median(peakScore),
-                x = median(geneScore)
+                x = median(peakScore),
+                y = median(geneScore)
             ) %>%
             left_join(select_df) %>%
             mutate(label = paste0(
                 "dist_to_TSS = ", distanceToTSS,
                 "\ncor_value = ", round(cor, digits = 2),
                 "\n", sigShow, " = ", format(!!sym(sigShow),
-                                             scientific = TRUE,
-                                             digits = 2)
+                    scientific = TRUE,
+                    digits = 2
+                )
             )) -> pos_Info
 
         p <- p +
             ggrepel::geom_text_repel(aes(x = x, y = y, label = label),
-                                     data = pos_Info,
-                                     alpha = 0.8)
+                data = pos_Info,
+                alpha = 0.8
+            )
     }
 
 
@@ -150,66 +165,80 @@ plot_peakGeneCor <- function(mmAnnoCor,
 #' @export
 #'
 #' @examples
-#' data("RNA_normCount")
-#' data("ATAC_normCount")
+#' if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+#'     data("RNA_normCount")
+#'     data("ATAC_normCount")
+#'     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+#'     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
+#'     peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
+#'     peak_GR <- loadPeakFile(peak_path)[1:100]
+#'     mmAnno <- mm_geneScan(peak_GR, Txdb)
 #'
-#' library(TxDb.Athaliana.BioMart.plantsmart28)
-#' Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-#' seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
-#' peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
-#' peak_GR <- loadPeakFile(peak_path)[1:100]
-#' mmAnno <- mm_geneScan(peak_GR,Txdb)
+#'     ATAC_colData <- data.frame(
+#'         row.names = colnames(ATAC_normCount),
+#'         type = gsub("_R[0-9]", "", colnames(ATAC_normCount))
+#'     )
 #'
-#' ATAC_colData <- data.frame(row.names = colnames(ATAC_normCount),
-#'                            type = gsub("_R[0-9]", "", colnames(ATAC_normCount))
-#'                            )
+#'     integrate_replicates(ATAC_normCount, ATAC_colData) -> ATAC_normCount_merge
+#'     RNA_colData <- data.frame(
+#'         row.names = colnames(RNA_normCount),
+#'         type = gsub("_R[0-9]", "", colnames(RNA_normCount))
+#'     )
+#'     integrate_replicates(RNA_normCount, RNA_colData) -> RNA_normCount_merge
+#'     peakGeneCor(
+#'         mmAnno = mmAnno,
+#'         peakScoreMt = ATAC_normCount_merge,
+#'         geneScoreMt = RNA_normCount_merge,
+#'         parallel = FALSE
+#'     ) -> mmAnnoCor
 #'
-#' integrate_replicates(ATAC_normCount, ATAC_colData) -> ATAC_normCount_merge
-#' RNA_colData <- data.frame(row.names = colnames(RNA_normCount),
-#'                           type = gsub("_R[0-9]", "", colnames(RNA_normCount))
-#'                           )
-#' integrate_replicates(RNA_normCount, RNA_colData) -> RNA_normCount_merge
-#' peakGeneCor(mmAnno = mmAnno,
-#'             peakScoreMt = ATAC_normCount_merge,
-#'             geneScoreMt = RNA_normCount_merge,
-#'             parallel = FALSE) -> mmAnnoCor
+#'     # shinyParse_peakGeneCor(mmAnnoCor)
 #'
-#' # shinyParse_peakGeneCor(mmAnnoCor)
-#'
-shinyParse_peakGeneCor <- function(mmAnnoCor){
+#' }
+shinyParse_peakGeneCor <- function(mmAnnoCor) {
     all_genes <- unique(mmAnnoCor$gene_id)
 
     mmAnnoCor$distanceToTSS <- as.integer(mmAnnoCor$distanceToTSS)
 
     ui <- shiny::fluidPage(
         fluidRow(
-            column(2,
-                   suppressWarnings(selectizeInput("gene",
-                                                   "Gene",
-                                                   choices = all_genes)),
+            column(
+                2,
+                suppressWarnings(selectizeInput("gene",
+                    "Gene",
+                    choices = all_genes
+                )),
             ),
-            column(2,
-                   numericInput("cor", "Cor_filter", value = 0, min = 0, max = 1,
-                                step = 0.01)
+            column(
+                2,
+                numericInput("cor", "Cor_filter",
+                    value = 0, min = 0, max = 1,
+                    step = 0.01
+                )
             ),
-            column(2,
-                   numericInput("pvalue", "pvalue_filter", value = 1, min = 0, max = 1,
-                                step = 1e-50)
+            column(
+                2,
+                numericInput("pvalue", "pvalue_filter",
+                    value = 1, min = 0, max = 1,
+                    step = 1e-50
+                )
             )
-
         ),
         fluidRow(
-            column(4,
-                   tableOutput("GRange"),
-                   tableOutput("geneScore"),
-                   tableOutput("peakScore")
+            column(
+                4,
+                tableOutput("GRange"),
+                tableOutput("geneScore"),
+                tableOutput("peakScore")
             )
         ),
         fluidRow(
-            column(12,
-                   actionButton("click", "plot"),
-                   actionButton("reset", "Clear"),
-                   plotOutput("plot_peakGene"))
+            column(
+                12,
+                actionButton("click", "plot"),
+                actionButton("reset", "Clear"),
+                plotOutput("plot_peakGene")
+            )
         )
     )
 
@@ -220,24 +249,27 @@ shinyParse_peakGeneCor <- function(mmAnnoCor){
         tibble::as_tibble(rownames = "gene_id")
 
     server <- function(input, output, session) {
-
-        data <- reactive(subset(mmAnnoCor,
-                                gene_id %in% input$gene &
-                                    abs(cor) > input$cor &
-                                    pvalue < input$pvalue))
+        data <- reactive(subset(
+            mmAnnoCor,
+            gene_id %in% input$gene &
+                abs(cor) > input$cor &
+                pvalue < input$pvalue
+        ))
 
         output$GRange <- renderTable(data.frame(data()))
         output$peakScore <- renderTable(
             dplyr::filter(peakScoreMt, feature_id %in% data()$feature_id)
         )
         output$geneScore <- renderTable(geneScoreMt %>%
-                                            dplyr::filter(gene_id == input$gene))
+            dplyr::filter(gene_id == input$gene))
 
         # https://shiny.rstudio.com/articles/action-buttons.html
         v <- reactiveValues(data = NULL)
-        observeEvent(input$click,{
-            v$data <- plot_peakGeneCor(mmAnnoCor = data(),
-                                       select_gene = input$gene)
+        observeEvent(input$click, {
+            v$data <- plot_peakGeneCor(
+                mmAnnoCor = data(),
+                select_gene = input$gene
+            )
         })
 
         observeEvent(input$reset, {
@@ -245,14 +277,16 @@ shinyParse_peakGeneCor <- function(mmAnnoCor){
         })
 
 
-        output$plot_peakGene <- renderPlot({
-            if (is.null(v$data)) return()
-            v$data
-        }, res = 96)
-
-
+        output$plot_peakGene <- renderPlot(
+            {
+                if (is.null(v$data)) {
+                    return()
+                }
+                v$data
+            },
+            res = 96
+        )
     }
 
     shinyApp(ui, server)
-
 }

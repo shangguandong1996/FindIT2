@@ -1,5 +1,7 @@
-utils::globalVariables(c("distanceToTSS_abs", "peak_gene_pair",
-                         "promoter_feature"))
+utils::globalVariables(c(
+    "distanceToTSS_abs", "peak_gene_pair",
+    "promoter_feature"
+))
 
 #' peakGeneCor
 #'
@@ -17,32 +19,37 @@ utils::globalVariables(c("distanceToTSS_abs", "peak_gene_pair",
 #' @export
 #'
 #' @examples
-#' data("RNA_normCount")
-#' data("ATAC_normCount")
 #'
-#' library(TxDb.Athaliana.BioMart.plantsmart28)
-#' Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-#' seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
-#' peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
-#' peak_GR <- loadPeakFile(peak_path)[1:100]
-#' mmAnno <- mm_geneScan(peak_GR,Txdb)
+#' if (require(TxDb.Athaliana.BioMart.plantsmart28)){
+#'     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+#'     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
+#'     data("RNA_normCount")
+#'     data("ATAC_normCount")
+#'     peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
+#'     peak_GR <- loadPeakFile(peak_path)[1:100]
+#'     mmAnno <- mm_geneScan(peak_GR, Txdb)
 #'
-#' ATAC_colData <- data.frame(row.names = colnames(ATAC_normCount),
-#'                            type = gsub("_R[0-9]", "", colnames(ATAC_normCount))
-#'                            )
+#'     ATAC_colData <- data.frame(
+#'         row.names = colnames(ATAC_normCount),
+#'         type = gsub("_R[0-9]", "", colnames(ATAC_normCount))
+#'     )
 #'
-#' integrate_replicates(ATAC_normCount, ATAC_colData) -> ATAC_normCount_merge
-#' RNA_colData <- data.frame(row.names = colnames(RNA_normCount),
-#'                           type = gsub("_R[0-9]", "", colnames(RNA_normCount))
-#'                           )
-#' integrate_replicates(RNA_normCount, RNA_colData) -> RNA_normCount_merge
-#' peakGeneCor(mmAnno = mmAnno,
-#'             peakScoreMt = ATAC_normCount_merge,
-#'             geneScoreMt = RNA_normCount_merge,
-#'             parallel = FALSE) -> mmAnnoCor
+#'     integrate_replicates(ATAC_normCount, ATAC_colData) -> ATAC_normCount_merge
+#'     RNA_colData <- data.frame(
+#'         row.names = colnames(RNA_normCount),
+#'         type = gsub("_R[0-9]", "", colnames(RNA_normCount))
+#'     )
+#'     integrate_replicates(RNA_normCount, RNA_colData) -> RNA_normCount_merge
+#'     peakGeneCor(
+#'         mmAnno = mmAnno,
+#'         peakScoreMt = ATAC_normCount_merge,
+#'         geneScoreMt = RNA_normCount_merge,
+#'         parallel = FALSE
+#'     ) -> mmAnnoCor
 #'
-#' mmAnnoCor
+#'     mmAnnoCor
 #'
+#' }
 peakGeneCor <- function(mmAnno,
                         peakScoreMt,
                         geneScoreMt,
@@ -53,7 +60,7 @@ peakGeneCor <- function(mmAnno,
         message("Good, your two matrix colnames matchs")
     } else {
         stop("Sorry, your two matrix colnames do not match",
-             call. = FALSE
+            call. = FALSE
         )
     }
 
@@ -62,15 +69,16 @@ peakGeneCor <- function(mmAnno,
     withr::local_options(list(warn = 1))
     if (mean(mmAnno$gene_id %in% rownames(geneScoreMt)) < 1 |
         mean(mmAnno$feature_id %in% rownames(peakScoreMt)) < 1) {
-
         left_index <- mmAnno$gene_id %in% rownames(geneScoreMt) &
             mmAnno$feature_id %in% rownames(peakScoreMt)
 
         mmAnno_left <- mmAnno[left_index]
         mmAnno_drop <- mmAnno[!left_index]
-        msg <- paste("some gene_id or feature_id in your mmAnno is not in your",
-                     "geneScoreMt or peakScore Mt,",
-                     "final cor and pvalue of these gene_id or feature_id pair will be NA\n")
+        msg <- paste(
+            "some gene_id or feature_id in your mmAnno is not in your",
+            "geneScoreMt or peakScore Mt,",
+            "final cor and pvalue of these gene_id or feature_id pair will be NA\n"
+        )
 
         warning(msg, call. = FALSE)
     } else {
@@ -122,28 +130,17 @@ peakGeneCor <- function(mmAnno,
     mmAnno_left$cor <- cor_mt[, 1]
     mmAnno_left$pvalue <- cor_mt[, 2]
     mmAnno_left$p_adj <- p.adjust(mmAnno_left$pvalue)
-
-    # compare with BH, qvalue is more soft
-    qvalue_result <- tryCatch(qvalue::qvalue(
-        p = mmAnno_left$pvalue,
-        fdr.level = 0.05,
-        pi0.method = "bootstrap"
-    ),
-    error = function(e) NULL
-    )
-
-    if (class(qvalue_result) == "qvalue") {
-        qvalues <- qvalue_result$qvalues
-    } else {
-        qvalues <- NA
-    }
-    mmAnno_left$qvalue <- qvalues
+    mmAnno_left$qvalue <- calcQvalue(mmAnno_left$pvalue)
 
     mmAnno <- sort(c(mmAnno_drop, mmAnno_left))
     metadata(mmAnno)$peakScoreMt <- peakScoreMt
     metadata(mmAnno)$geneScoreMt <- geneScoreMt
     metadata(mmAnno)$mmCor_mode <- "peakGeneCor"
 
+    cat(
+        ">> done\t\t",
+        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+    )
     return(mmAnno)
 }
 
@@ -164,18 +161,18 @@ peakGeneCor <- function(mmAnno,
 #'
 #' @examples
 #'
-#' data("ATAC_normCount")
-#'
-#' library(TxDb.Athaliana.BioMart.plantsmart28)
-#' Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-#' seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
-#' peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
-#' peak_GR <- loadPeakFile(peak_path)[1:100]
-#'
-#' enhancerPromoterCor(peak_GR = peak_GR,
-#' Txdb = Txdb,
-#' peakScoreMt = ATAC_normCount,
-#' parallel = FALSE) -> mm_ePLink
+#' if (require(TxDb.Athaliana.BioMart.plantsmart28)){
+#'     data("ATAC_normCount")
+#'     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+#'     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
+#'     peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
+#'     peak_GR <- loadPeakFile(peak_path)[1:100]
+#'     enhancerPromoterCor(
+#'     peak_GR = peak_GR,
+#'     Txdb = Txdb,
+#'     peakScoreMt = ATAC_normCount,
+#'     parallel = FALSE) -> mm_ePLink
+#' }
 #'
 #'
 enhancerPromoterCor <- function(peak_GR,
@@ -185,13 +182,20 @@ enhancerPromoterCor <- function(peak_GR,
                                 up_scanEnhancer = 2e4,
                                 down_scanEnhacner = 2e4,
                                 peakScoreMt,
-                                parallel = FALSE){
+                                parallel = FALSE) {
 
-    mm_geneScan(peak_GR = peak_GR,
-                Txdb = Txdb,
-                upstream = up_scanPromoter,
-                downstream = down_scanPromoter) -> mm_promoter
+    cat(
+        ">> using scanPromoter parameter to scan promoter for each gene...\t\t",
+        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+    )
+    quiet(mm_geneScan(
+        peak_GR = peak_GR,
+        Txdb = Txdb,
+        upstream = up_scanPromoter,
+        downstream = down_scanPromoter
+    )) -> mm_promoter
 
+    # find the nearest peak for gene
     mm_promoter %>%
         data.frame() %>%
         dplyr::select(feature_id, gene_id, distanceToTSS) %>%
@@ -200,9 +204,10 @@ enhancerPromoterCor <- function(peak_GR,
         dplyr::mutate(
             promoter_feature = feature_id[which.min(distanceToTSS_abs)],
             peak_gene_pair = paste0(feature_id, ":", gene_id)
-            ) %>%
+        ) %>%
         dplyr::ungroup() -> mm_promoter_pair
 
+    # only maintain two column
     pair_info <- mm_promoter_pair %>%
         dplyr::select(gene_id, promoter_feature) %>%
         dplyr::distinct() %>%
@@ -210,30 +215,44 @@ enhancerPromoterCor <- function(peak_GR,
             peak_gene_pair = paste0(promoter_feature, ":", gene_id)
         )
 
+    cat(paste0(">> there are ", nrow(pair_info), " gene have scaned promoter\n"))
+
+    # to fish the distanceToTSS
     mm_promoter_pair %>%
         dplyr::filter(peak_gene_pair %in% pair_info$peak_gene_pair) %>%
         dplyr::select(gene_id, distanceToTSS, promoter_feature) -> mm_promoter_tidy
 
 
-    mm_geneScan(peak_GR = peak_GR,
-                Txdb = Txdb,
-                upstream = up_scanEnhancer,
-                downstream = down_scanEnhacner) -> mm_scan
+    cat(
+        ">> using scanEnhancer parameter to scan Enhancer for each gene...\t\t",
+        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+    )
+    quiet(mm_geneScan(peak_GR = peak_GR,
+                      Txdb = Txdb,
+                      upstream = up_scanEnhancer,
+                      downstream = down_scanEnhacner)
+          ) -> mm_scan
 
     # some gene may not have promoter(no open peak) in here
     mm_scan <- subset(mm_scan, gene_id %in% mm_promoter_tidy$gene_id)
 
-    mcols(mm_scan) %>%
-        data.frame() %>%
-        dplyr::left_join(mm_promoter_tidy[, c(1, 3)]) -> enhancer_peak_pair
+    # suppress left_join
+    suppressMessages(
+        mcols(mm_scan) %>%
+            data.frame() %>%
+            dplyr::left_join(mm_promoter_tidy[, c(1, 3)])
+        ) -> enhancer_peak_pair
 
 
     mt_promoter <- peakScoreMt[enhancer_peak_pair$promoter_feature, ]
     mt_enhancer <- peakScoreMt[enhancer_peak_pair$feature_id, ]
 
 
+    cat(
+        ">> calculating cor and pvalue, which may be time consuming...\t\t",
+        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+    )
     if (parallel) {
-        # print_msgParallel()
         # though cor(t(mt_gene["gene",]), t(mt_peak["peak,]))
         # may quickyly produce the whole result
         # but it will produce a very very huge matrix
@@ -256,6 +275,10 @@ enhancerPromoterCor <- function(peak_GR,
         })) -> cor_result
     }
 
+    cat(
+        ">> merging all info together...\t\t",
+        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+    )
     cor_result <- unlist(cor_result)
     cor_mt <- matrix(cor_result, ncol = 2, byrow = TRUE)
 
@@ -267,21 +290,7 @@ enhancerPromoterCor <- function(peak_GR,
 
     mm_scan$p_adj <- p.adjust(mm_scan$pvalue)
 
-    # compare with BH, qvalue is more soft
-    qvalue_result <- tryCatch(qvalue::qvalue(
-        p = mm_scan$pvalue,
-        fdr.level = 0.05,
-        pi0.method = "bootstrap"
-    ),
-    error = function(e) NULL
-    )
-
-    if (class(qvalue_result) == "qvalue") {
-        qvalues <- qvalue_result$qvalues
-    } else {
-        qvalues <- NA
-    }
-    mm_scan$qvalue <- qvalues
+    mm_scan$qvalue <- calcQvalue(mm_scan$pvalue)
 
     metadata(mm_scan)$mm_promoter_tidy <- mm_promoter_tidy
     metadata(mm_scan)$peakScoreMt <- peakScoreMt
@@ -292,7 +301,9 @@ enhancerPromoterCor <- function(peak_GR,
 
     metadata(mm_scan)$mmCor_mode <- "enhancerPromoterCor"
 
+    cat(
+        ">> done\t\t",
+        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+    )
     return(mm_scan)
-
-
 }
