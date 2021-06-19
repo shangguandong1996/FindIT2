@@ -24,12 +24,12 @@ find related peaks of your input genes, which is useful when you want to plot
 volcano plot or heatmap of peaks.
 }
 \examples{
-library(TxDb.Athaliana.BioMart.plantsmart28)
-Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
-peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
-peak_GR <- loadPeakFile(peak_path)
-peak_pair <- mm_geneBound(peak_GR, Txdb, c("AT5G01015", "AT5G67570"))
-peak_pair
-
+if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+    Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+    seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
+    peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+    peak_GR <- loadPeakFile(peak_path)
+    peak_pair <- mm_geneBound(peak_GR, Txdb, c("AT5G01015", "AT5G67570"))
+    peak_pair
+}
 }

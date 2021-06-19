@@ -34,12 +34,12 @@ Annotate peaks using geneScan mode, which means every peak have more than one
 related genes.
 }
 \examples{
-library(TxDb.Athaliana.BioMart.plantsmart28)
-Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
-peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
-peak_GR <- loadPeakFile(peak_path)
-peakAnno <- mm_geneScan(peak_GR,Txdb)
-peakAnno
-
+if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+    Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+    seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
+    peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+    peak_GR <- loadPeakFile(peak_path)
+    peakAnno <- mm_geneScan(peak_GR, Txdb)
+    peakAnno
+}
 }
