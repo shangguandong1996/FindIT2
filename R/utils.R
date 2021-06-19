@@ -22,45 +22,44 @@ check_seqlevel <- function(peak_GR, Txdb, print_ChrN = 10) {
     cat(">> your Txdb seqlevel:", Txdb_level, "...\n")
 
     if (all(!seqlevels(peak_GR) %in% seqlevels(Txdb))) {
-        stop("\nSorry, it seems that peak_GR and Txdb have no sequence levels in common",
+        stop(
+            "\nSorry, it seems that peak_GR and Txdb have no sequence levels in common",
              call. = FALSE
-        )
+            )
     } else if (any(!seqlevels(peak_GR) %in% seqlevels(Txdb))) {
-        msg <- c(
+        msg <- paste0(
             "some peak's Chr is nor in your Txdb, for example: ",
             seqlevels(peak_GR)[!seqlevels(peak_GR) %in% seqlevels(Txdb)], "\n",
             "  I have filtered peaks in these Chr, though seqlevels still retain."
         )
-        warning(msg,
-                call. = FALSE
-        )
+        warning(msg,call. = FALSE)
     } else {
         message("Good, your Chrs in peak_GR is all in Txdb")
     }
 }
 
 
-addfeatureIdSuggsesion <- function() {
-    # cat(">> sorry, it seems that you do not have column named 'feature_id' in peak_GR\n")
-    # cat(">> if you do have 'name' column or 1th column in metacolumn, which represent your peak name in peak_GR\n")
-    # cat("\n>> you can rename this column with 'feature_id' like\n")
-    # cat('colnames(S4Vectors::mcols(peak_GR))[1] <- "feature_id"\n')
-    # cat("\n>> or you can just add a new column like\n")
-    # cat('peak_GR$feature_id <- paste0("peakName_", seq_len(length(peak_GR)))\n')
-    msg <- c(
-        "\n>> sorry, it seems that you do not have column named 'feature_id' in peak_GR\n",
-        ">> if you do have 'name' column in Nth metacolumn,",
-        "which represent your peak name in peak_GR\n",
-        "\n>> you can rename this column with 'feature_id' like\n",
-        'colnames(S4Vectors::mcols(peak_GR))[N] <- "feature_id"\n',
-        ">> most of the time, the name column will appear in 1th metacolumn, so you can just\n",
-        'colnames(S4Vectors::mcols(peak_GR))[1] <- "feature_id"\n',
-        "\n>> or you can just add a new column like\n",
-        'peak_GR$feature_id <- paste0("peakName_", seq_len(length(peak_GR)))\n',
-        "\n>>please prepare peak_GR again"
-    )
-    stop(msg, call. = FALSE)
-}
+# addfeatureIdSuggsesion <- function() {
+#     # cat(">> sorry, it seems that you do not have column named 'feature_id' in peak_GR\n")
+#     # cat(">> if you do have 'name' column or 1th column in metacolumn, which represent your peak name in peak_GR\n")
+#     # cat("\n>> you can rename this column with 'feature_id' like\n")
+#     # cat('colnames(S4Vectors::mcols(peak_GR))[1] <- "feature_id"\n')
+#     # cat("\n>> or you can just add a new column like\n")
+#     # cat('peak_GR$feature_id <- paste0("peakName_", seq_len(length(peak_GR)))\n')
+#     msg <- c(
+#         "\n>> sorry, it seems that you do not have column named 'feature_id' in peak_GR\n",
+#         ">> if you do have 'name' column in Nth metacolumn,",
+#         "which represent your peak name in peak_GR\n",
+#         "\n>> you can rename this column with 'feature_id' like\n",
+#         'colnames(S4Vectors::mcols(peak_GR))[N] <- "feature_id"\n',
+#         ">> most of the time, the name column will appear in 1th metacolumn, so you can just\n",
+#         'colnames(S4Vectors::mcols(peak_GR))[1] <- "feature_id"\n',
+#         "\n>> or you can just add a new column like\n",
+#         'peak_GR$feature_id <- paste0("peakName_", seq_len(length(peak_GR)))\n',
+#         "\n>>please prepare peak_GR again"
+#     )
+#     stop(msg, call. = FALSE)
+# }
 
 check_parameter_length <- function(mmAnno, decay_dist) {
     length_upstream <- mmAnno@metadata$upstream
@@ -131,3 +130,30 @@ report_geneInfo <- function(gene_GR) {
 #     )
 #     message(msg)
 # }
+
+# https://stackoverflow.com/questions/34208564/how-to-hide-or-disable-in-function-printed-message
+quiet <- function(x) {
+    sink(tempfile())
+    on.exit(sink())
+    invisible(force(x))
+}
+
+
+calcQvalue <- function(pvalue){
+    # compare with BH, qvalue is more soft
+    qvalue_result <- tryCatch(qvalue::qvalue(
+        p = pvalue,
+        fdr.level = 0.05,
+        pi0.method = "bootstrap"
+    ),
+    error = function(e) NULL
+    )
+
+    if (class(qvalue_result) == "qvalue") {
+        qvalues <- qvalue_result$qvalues
+    } else {
+        qvalues <- NA
+    }
+
+    return(qvalues)
+}
