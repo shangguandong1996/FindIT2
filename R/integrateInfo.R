@@ -1,5 +1,7 @@
-utils::globalVariables(c("padj", "RP_rank", "diff_rank", "rankProduct",
-                         "rankOf_rankProduct", "gene_category"))
+utils::globalVariables(c(
+    "padj", "RP_rank", "diff_rank", "rankProduct",
+    "rankOf_rankProduct", "gene_category"
+))
 
 #' integrate_ChIP_RNA
 #'
@@ -18,21 +20,27 @@ utils::globalVariables(c("padj", "RP_rank", "diff_rank", "rankProduct",
 #' @export
 #'
 #' @examples
-#' data("RNADiff_LEC2_GR")
-#' library(TxDb.Athaliana.BioMart.plantsmart28)
-#' Txdb <- TxDb.Athaliana.BioMart.plantsmart28
-#' seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
-#' peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
-#' peak_GR <- loadPeakFile(peak_path)
-#' mmAnno <- mm_geneScan(peak_GR,Txdb)
+#' if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+#'     data("RNADiff_LEC2_GR")
+#'     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
+#'     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
+#'     peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+#'     peak_GR <- loadPeakFile(peak_path)
+#'     mmAnno <- mm_geneScan(peak_GR, Txdb)
 #'
-#' calcRP_TFHit(mmAnno = mmAnno,
-#'              Txdb = Txdb) -> result_geneRP
-#' # output a plot
-#' integrate_ChIP_RNA(result_geneRP = result_geneRP,
-#'                   result_geneDiff = RNADiff_LEC2_GR) -> merge_data
-#' # if you want to extract merge target data
-#' target_data <- merge_data$data
+#'     calcRP_TFHit(
+#'         mmAnno = mmAnno,
+#'         Txdb = Txdb
+#'     ) -> result_geneRP
+#'     # output a plot
+#'     integrate_ChIP_RNA(
+#'         result_geneRP = result_geneRP,
+#'         result_geneDiff = RNADiff_LEC2_GR
+#'     ) -> merge_data
+#'     # if you want to extract merge target data
+#'     target_data <- merge_data$data
+#'
+#' }
 integrate_ChIP_RNA <- function(result_geneRP,
                                result_geneDiff,
                                lfc_threshold = 1,
@@ -73,8 +81,8 @@ integrate_ChIP_RNA <- function(result_geneRP,
 
 
     dplyr::left_join(result_geneRP,
-                     result_geneDiff,
-                     by = "gene_id"
+        result_geneDiff,
+        by = "gene_id"
     ) -> merge_result
     allGenes_N <- as.double(nrow(merge_result))
 
@@ -96,7 +104,7 @@ integrate_ChIP_RNA <- function(result_geneRP,
                 TRUE ~ "static"
             ),
             gene_category = factor(gene_category,
-                                   levels = c("up", "down", "static")
+                levels = c("up", "down", "static")
             )
         ) -> merge_result
 
@@ -108,29 +116,29 @@ integrate_ChIP_RNA <- function(result_geneRP,
 
     if (length(upGenes_rank) == 0 & length(downGenes_rank) == 0) {
         warning("no significant genes, just returing rank product result",
-                call. = FALSE
+            call. = FALSE
         )
         return(merge_result)
     } else if (length(upGenes_rank) == 0) {
         warning("no significant up genes, just returing rank product result",
-                call. = FALSE
+            call. = FALSE
         )
         return(merge_result)
     } else if (length(downGenes_rank) == 0) {
         warning("no significant down genes, just returing rank product result",
-                call. = FALSE
+            call. = FALSE
         )
         return(merge_result)
     }
 
     suppressWarnings(ks.test(upGenes_rank,
-                             staticGenes_rank,
-                             alternative = "greater"
+        staticGenes_rank,
+        alternative = "greater"
     )$p.value) -> up_static_pvalue
 
     suppressWarnings(ks.test(downGenes_rank,
-                             staticGenes_rank,
-                             alternative = "greater"
+        staticGenes_rank,
+        alternative = "greater"
     )$p.value) -> down_static_pvalue
 
 
@@ -196,33 +204,33 @@ integrate_ChIP_RNA <- function(result_geneRP,
 #' rownames(mt) <- paste0("TF", 1:10)
 #'
 #' colData <- data.frame(
-#' type = gsub("_[0-9]","", colnames(mt)),
-#' row.names = colnames(mt))
+#'     type = gsub("_[0-9]", "", colnames(mt)),
+#'     row.names = colnames(mt)
+#' )
 #'
 #'
-#'integrate_replicates(mt, colData, type = "value")
-#'
+#' integrate_replicates(mt, colData, type = "value")
 integrate_replicates <- function(mt,
-                                 colData,
-                                 fun = NULL,
-                                 type = "value") {
+    colData,
+    fun = NULL,
+    type = "value") {
     if (!all(colnames(mt) == rownames(colData))) {
         stop("Please make sure order between colnames(mt) and rownames(colData) are consistent",
-             call. = FALSE
+            call. = FALSE
         )
     } else if (colnames(colData) > 1 & colnames(colData) != "type") {
         stop("only support one column colData and its column name must be 'type'",
-             call. = FALSE
+            call. = FALSE
         )
     }
 
     if (is.null(fun)) {
         fun <- switch(type,
-                      value = mean,
-                      rank = prod,
-                      rank_zscore = Stouffer_method,
-                      pvalue = CCT,
-                      stop("Invalid type value")
+            value = mean,
+            rank = prod,
+            rank_zscore = Stouffer_method,
+            pvalue = CCT,
+            stop("Invalid type value")
         )
     } else {
         fun <- fun
@@ -235,12 +243,12 @@ integrate_replicates <- function(mt,
         apply(mt[, x == replicates, drop = FALSE], 1, fun)
     }) -> result
 
-    if (length(result) == 1){
+    if (length(result) == 1) {
         return(result)
     }
 
     if (type == "rank") {
-        result <- apply(result, 2, function(x) rank(-x))
+        result <- apply(result, 2, function(x) rank(x))
         return(result)
     } else {
         return(result)
@@ -279,7 +287,7 @@ CCT <- function(pvals, weights = NULL) {
     }
     if (is.one) {
         warning("There are p-values that are exactly 1!",
-                call. = FALSE
+            call. = FALSE
         )
         return(1)
     }
@@ -314,15 +322,15 @@ CCT <- function(pvals, weights = NULL) {
 }
 
 #' @importFrom stats qnorm
-INT <- function(x){
+INT <- function(x) {
     # https://www.biostars.org/p/80597/
     # qnorm((rank(x,na.last="keep")-0.5)/sum(!is.na(x)))
     # origin paper
     # dx.doi.org/10.1038/nature11401
-    qnorm((rank(x,na.last="keep")-0.5)/sum(!is.na(x)))
+    qnorm((rank(x, na.last = "keep") - 0.5) / sum(!is.na(x)))
 }
 
-Stouffer_method <- function(zscore){
+Stouffer_method <- function(zscore) {
     # https://www.biostars.org/p/370149/
-    sum(zscore)/sqrt(length(zscore))
+    sum(zscore) / sqrt(length(zscore))
 }
