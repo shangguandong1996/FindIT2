@@ -21,10 +21,12 @@ Suggests:
     knitr,
     rmarkdown,
     sessioninfo,
+    testthat (>= 3.0.0),
     TxDb.Athaliana.BioMart.plantsmart28
 VignetteBuilder: knitr
 Depends: 
-    GenomicRanges
+    GenomicRanges,
+    R (>= 3.5.0)
 Imports: 
     withr,
     BiocGenerics,
@@ -52,3 +54,4 @@ Imports:
     progress,
     purrr,
     glmnet
+Config/testthat/edition: 3

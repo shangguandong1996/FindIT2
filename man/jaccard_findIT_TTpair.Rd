@@ -24,12 +24,14 @@ jaccard_findIT_TTpair
 
 data("TF_target_database")
 data("input_genes")
-findIT_TTPair(input_genes = input_genes,
-TF_target_database = TF_target_database) ->result_findIT_TTPair
+findIT_TTPair(
+    input_genes = input_genes,
+    TF_target_database = TF_target_database
+) -> result_findIT_TTPair
 
-jaccard_findIT_TTpair(input_genes = input_genes,
-TF_target_database = TF_target_database,
-input_TF_id = result_findIT_TTPair$TF_id[1:3])
-
-
+jaccard_findIT_TTpair(
+    input_genes = input_genes,
+    TF_target_database = TF_target_database,
+    input_TF_id = result_findIT_TTPair$TF_id[1:3]
+)
 }

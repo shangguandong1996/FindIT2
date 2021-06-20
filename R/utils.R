@@ -89,7 +89,7 @@ check_colnames <- function(colnames,
     }
 
     if (any(!check_result)) {
-        msg <- paste("sorry, there is no column named", colnames[!check_result],
+        msg <- paste("\nsorry, there is no column named", colnames[!check_result],
                      "in your", deparse(substitute(data)),
                      sep = " "
         )

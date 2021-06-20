@@ -35,8 +35,16 @@ quiet(
 
 test_that("plot_peakGeneCor test",{
     p <- plot_peakGeneCor(mmAnnoCor, select_gene = "AT5G01010")
+    pb <- ggplot2::ggplot_build(p)
     expect_s3_class(p, "ggplot")
+    expect_equal(pb$data[[1]]$x[1], 91.89544, tolerance = 1e-5)
+    # there 4 facet
+    expect_equal(nrow(pb$data[[3]]), 4)
 
     p <- plot_peakGeneCor(mm_ePLink, select_gene = "AT5G01010")
+    pb <- ggplot2::ggplot_build(p)
     expect_s3_class(p, "ggplot")
+    expect_equal(pb$data[[1]]$x[1], 96.44832, tolerance = 1e-5)
+    # there 8 facet
+    expect_equal(nrow(pb$data[[3]]), 8)
 })

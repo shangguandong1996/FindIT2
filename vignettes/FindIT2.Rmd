@@ -225,6 +225,15 @@ target_result
 
 # Find influential TF(IT)
 
+解释下
+when you have
+- select peak (from Kmeans, diff analysis and so on)
+- peak_GR(ATAC/H3K27me3 GRange with feature_id column)
+- TF_GR_database(can from public TF database or motif scan in ATAC/H3K27me3 data,
+it have TF_id column)
+- powerful computer(shuffle will be slow if not using multi-threads)
+
+
 ```{r "prepare_for_findIT"}
 
 input_genes <- target_result$gene_id[1:50]
@@ -232,20 +241,36 @@ input_genes <- target_result$gene_id[1:50]
 related_peaks <- mm_geneBound(peak_GR = ATAC_peak_GR,
                               Txdb = Txdb,
                               input_genes = input_genes)
-input_feature_id <- related_peaks$feature_id
+input_feature_id <- unique(related_peaks$feature_id)
 
 # AT1G28300 is LEC2 tair ID
 ChIP_peak_GR$TF_id <- "AT1G28300"
+
+# add TF_GR_database from Remap2020
+TF_GR_database_path <- system.file("extdata", "TF_GR_database.bed.gz", package = "FindIT2")
+TF_GR_database <- loadPeakFile(TF_GR_database_path)
+colnames(mcols(TF_GR_database))[1] <- "TF_id"
+
+# merge LEC2 ChIP GR
+TF_GR_database <- c(TF_GR_database, ChIP_peak_GR)
+
+TF_GR_database
+
 ```
 
-
 ## Find IT of input peak based on shuffle
+
+when you have
+- select peak (from Kmeans, diff analysis and so on)
+- ATAC/H3K27me3
+- TF_GR_database(can from public TF database or motif scan in ATAC/H3K27me3 data)
+- powerful computer(shuffle will be slow if not using multi-threads)
 
 ```{r "findIT_enrichInShuffle"}
 set.seed(20160806)
 findIT_enrichInShuffle(input_feature_id = input_feature_id,
                        peak_GR = ATAC_peak_GR,
-                       TF_GR_database = ChIP_peak_GR,
+                       TF_GR_database = TF_GR_database,
                        shuffleN = 10) -> result_enrichInShuffle
 result_enrichInShuffle
 
@@ -253,10 +278,15 @@ result_enrichInShuffle
 
 ## Find IT of input peak based on fisher test
 
+when you have
+- select peak (from Kmeans, diff analysis and so on)
+- ATAC/H3K27me3
+- TF_GR_database(can from public TF database or motif scan in ATAC/H3K27me3 data)
+
 ```{r "findIT_enrichInAll"}
 findIT_enrichInAll(input_feature_id = input_feature_id, 
                    peak_GR = ATAC_peak_GR, 
-                   TF_GR_database = ChIP_peak_GR) -> result_enrichInAll
+                   TF_GR_database = TF_GR_database) -> result_enrichInAll
 
 result_enrichInAll
 
@@ -267,8 +297,8 @@ you can parse your result_result_enrichInAll
 ```{r}
 jaccard_findIT_enrichInAll(input_feature_id = input_feature_id,
                            peak_GR = ATAC_peak_GR,
-                           TF_GR_database = ChIP_peak_GR,
-                           input_TF_id = "AT1G28300") -> enrichAll_jaccard
+                           TF_GR_database = TF_GR_database,
+                           input_TF_id = result_enrichInAll$TF_id[1:4]) -> enrichAll_jaccard
 
 # it report the jaccard similarity of TF you input
 
@@ -276,8 +306,6 @@ jaccard_findIT_enrichInAll(input_feature_id = input_feature_id,
 # If you want to convert it to 1, you can just use 
 # diag(enrichAll_jaccard) <- 1
 
-# it only report the one TF jaccard similarity matrix, which may confuse you
-# you can see the several TF in next section
 enrichAll_jaccard
 
 ```
@@ -321,7 +349,7 @@ TTpair_jaccard
 set.seed(20160806)
 result_TFHit <- findIT_TFHit(input_genes = input_genes,
                              Txdb = Txdb,
-                             TF_GR_database = ChIP_peak_GR,
+                             TF_GR_database = TF_GR_database,
                              scan_dist = 2e4,
                              decay_dist = 1e3,
                              Chrs_included = "Chr5",
@@ -338,7 +366,7 @@ result_TFHit
 set.seed(20160806)
 result_findIT_regionRP <- findIT_regionRP(regionRP = regionRP,
                                           Txdb = Txdb,
-                                          TF_GR_database = ChIP_peak_GR,
+                                          TF_GR_database = TF_GR_database,
                                           input_genes = input_genes,
                                           background_number = 3000)
 
@@ -358,6 +386,8 @@ TF_pvalue <- assays(result_findIT_regionRP)$TF_pvalue
 `行为TF，列为时间点/样本，数值为percentMean`
 ```{r}
 TF_percentMean
+
+heatmap(TF_percentMean, Colv = NA, scale = "none")
 ```
 
 `在单个时间点/样本里面，行为基因，列是TF，数值为percent`
@@ -370,8 +400,9 @@ metadata(result_findIT_regionRP)$percent_df %>%
 E50h_TF_mt <- as.matrix(E50h_TF_percent[, -1])
 rownames(E50h_TF_mt) <- E50h_TF_percent$TF_id
 
-# because here I just have one TF, so the matrix do not look good :)
 E50h_TF_mt
+
+heatmap(E50h_TF_mt, scale = "none")
 
 ```
 
@@ -403,32 +434,46 @@ shinyParse_findIT_regionRP(merge_result = merge_result,mode = "TF")
 ## Find IT of input genes based on motif activity response
 
 ```{r}
-# Because here I just use the one TF, which does not does not meet the conditions of ridge regression.
-# So the output here just the correlation value !!!, not the z-scale value
-# But if you input more than one TF, it will use the ridge regression, and convert the coef of each TF into z-scale value 
 # This MARA is similar with 
 # https://gimmemotifs.readthedocs.io/en/master/tutorials.html#find-differential-motifs
+# please pay attention that it do not work in only several TF and several promoter
+# which you can see
+set.seed(20160806)
 findIT_MARA(input_feature_id = input_feature_id,
             peak_GR = ATAC_peak_GR,
             peakScoreMt = ATAC_normCount,
-            TF_GR_database = ChIP_peak_GR,
+            TF_GR_database = TF_GR_database,
             log = TRUE,
             meanScale = TRUE) -> result_findIT_MARA
 
 result_findIT_MARA
+
+findIT_MARA(input_feature_id = input_feature_id,
+            peak_GR = ATAC_peak_GR,
+            peakScoreMt = ATAC_normCount,
+            TF_GR_database = TF_GR_database,
+            log = TRUE,
+            meanScale = TRUE,
+            output = "cor")
+
+
+
 ```
 
 ```{r}
 # when you get the zscale value from findIT_MARA, you can use integrate_replicates to integrate replicate zscale by setting type as "rank_zscore"
 # Here each replicate are combined using Stouffer’s method
-ATAC_colData <- data.frame(row.names = colnames(ATAC_normCount),
-                           type = gsub("_R[0-9]", "", colnames(ATAC_normCount))
-                           )
-findIT_MARA_mt <- as.matrix(result_findIT_MARA[, -1])
-rownames(findIT_MARA_mt) <- result_findIT_MARA$TF_id
+MARA_mt <- as.matrix(result_findIT_MARA[, -1])
 
-integrate_replicates(mt = findIT_MARA_mt,
-                     colData = ATAC_colData,
+rownames(MARA_mt) <- result_findIT_MARA$TF_id
+
+MARA_colData <- data.frame(row.names = colnames(MARA_mt),
+                           type = gsub("_R[0-9]", "", colnames(MARA_mt))
+                           )
+
+
+integrate_replicates(mt = MARA_mt,
+                     colData = MARA_colData,
                      type = "rank_zscore")
 
 ```
@@ -457,6 +502,7 @@ rank_merge_df
 rank_merge_df <- rank_merge_df[rowSums(is.na(rank_merge_df)) == 0, ]
 
 rank_merge_mt <- as.matrix(rank_merge_df[, -1])
+rownames(rank_merge_mt) <- rank_merge_df$TF_id
 
 colData <- data.frame(row.names = colnames(rank_merge_mt),
                       type = rep("source", ncol(rank_merge_mt)))

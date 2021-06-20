@@ -313,9 +313,7 @@ findIT_TTPair <- function(input_genes,
                           TFHit_min = 5,
                           TFHit_max = 10000) {
 
-    check_colnames("TF_id", TF_target_database)
-    check_colnames("target_gene", TF_target_database)
-
+    check_colnames(c("TF_id","target_gene"), TF_target_database)
 
     # input_genes and TF-target pair may have some overlap
     # some human gene maybe look like number, like 12340?

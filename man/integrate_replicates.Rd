@@ -32,10 +32,10 @@ colnames(mt) <- paste0(paste0("type", 1:5), "_", rep(1:2, 5))
 rownames(mt) <- paste0("TF", 1:10)
 
 colData <- data.frame(
-type = gsub("_[0-9]","", colnames(mt)),
-row.names = colnames(mt))
+    type = gsub("_[0-9]", "", colnames(mt)),
+    row.names = colnames(mt)
+)
 
 
 integrate_replicates(mt, colData, type = "value")
-
 }
