@@ -14,35 +14,42 @@ utils::globalVariables(c("hit"))
 #'
 #' data("TF_target_database")
 #' data("input_genes")
-#' findIT_TTPair(input_genes = input_genes,
-#' TF_target_database = TF_target_database) ->result_findIT_TTPair
+#' findIT_TTPair(
+#'     input_genes = input_genes,
+#'     TF_target_database = TF_target_database
+#' ) -> result_findIT_TTPair
 #'
-#' jaccard_findIT_TTpair(input_genes = input_genes,
-#' TF_target_database = TF_target_database,
-#' input_TF_id = result_findIT_TTPair$TF_id[1:3])
-#'
-#'
+#' jaccard_findIT_TTpair(
+#'     input_genes = input_genes,
+#'     TF_target_database = TF_target_database,
+#'     input_TF_id = result_findIT_TTPair$TF_id[1:3]
+#' )
 jaccard_findIT_TTpair <- function(input_genes,
                                   TF_target_database,
-                                  input_TF_id){
+                                  input_TF_id) {
 
     input_genes <- as.character(unique(input_genes))
     input_TF_id <- as.character(unique(input_TF_id))
 
-    tibble::tibble(TF_id = rep(input_TF_id, each = length(input_genes)),
-                   target_gene = rep(input_genes, length(input_TF_id))) -> fill_df
+    tibble::tibble(
+        TF_id = rep(input_TF_id, each = length(input_genes)),
+        target_gene = rep(input_genes, length(input_TF_id))
+    ) -> fill_df
 
     TF_target_database %>%
-        dplyr::filter(TF_id %in% input_TF_id,
-                      target_gene %in% input_genes) %>%
+        dplyr::filter(
+            TF_id %in% input_TF_id,
+            target_gene %in% input_genes
+        ) %>%
         dplyr::select(TF_id, target_gene) %>%
         dplyr::mutate(hit = 1) -> TF_target_select
 
-    calc_jaccard(fill_df = fill_df,
-                 TF_target_select = TF_target_select) -> jaccard_similarity
+    calc_jaccard(
+        fill_df = fill_df,
+        TF_target_select = TF_target_select
+    ) -> jaccard_similarity
 
     return(jaccard_similarity)
-
 }
 
 
@@ -65,16 +72,18 @@ jaccard_findIT_TTpair <- function(input_genes,
 #' ChIP_peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
 #' ChIP_peak_GR <- loadPeakFile(ChIP_peak_path)
 #' ChIP_peak_GR$TF_id <- "AT1G28300"
-#' findIT_enrichInAll(input_feature_id = input_feature_id,
-#'                   peak_GR = peak_GR,
-#'                   TF_GR_database = ChIP_peak_GR) -> result_findIT_enrichInAll
+#' findIT_enrichInAll(
+#'     input_feature_id = input_feature_id,
+#'     peak_GR = peak_GR,
+#'     TF_GR_database = ChIP_peak_GR
+#' ) -> result_findIT_enrichInAll
 #'
-#' jaccard_findIT_enrichInAll(input_feature_id = input_feature_id,
-#'                            peak_GR = peak_GR,
-#'                            TF_GR_database = ChIP_peak_GR,
-#'                            input_TF_id = result_findIT_enrichInAll$TF_id[1])
-#'
-#'
+#' jaccard_findIT_enrichInAll(
+#'     input_feature_id = input_feature_id,
+#'     peak_GR = peak_GR,
+#'     TF_GR_database = ChIP_peak_GR,
+#'     input_TF_id = result_findIT_enrichInAll$TF_id[1]
+#' )
 jaccard_findIT_enrichInAll <- function(input_feature_id,
                                        peak_GR,
                                        TF_GR_database,
@@ -83,11 +92,15 @@ jaccard_findIT_enrichInAll <- function(input_feature_id,
     input_feature_id <- as.character(unique(input_feature_id))
     input_TF_id <- as.character(unique(input_TF_id))
 
-    tibble::tibble(TF_id = rep(input_TF_id,
-                               each = length(input_feature_id)),
-
-                   feature_id = rep(input_feature_id,
-                                     length(input_TF_id))) -> fill_df
+    tibble::tibble(
+        TF_id = rep(input_TF_id,
+            each = length(input_feature_id)
+        ),
+        feature_id = rep(
+            input_feature_id,
+            length(input_TF_id)
+        )
+    ) -> fill_df
 
     hits <- GenomicRanges::findOverlaps(peak_GR, TF_GR_database)
     peakTF_pair <- data.frame(
@@ -97,31 +110,34 @@ jaccard_findIT_enrichInAll <- function(input_feature_id,
         dplyr::distinct(feature_id, TF_id, .keep_all = TRUE)
 
     peakTF_pair %>%
-        dplyr::filter(TF_id %in% input_TF_id,
-                      feature_id %in% input_feature_id) %>%
-        dplyr::mutate(hit = 1)-> TF_target_select
+        dplyr::filter(
+            TF_id %in% input_TF_id,
+            feature_id %in% input_feature_id
+        ) %>%
+        dplyr::mutate(hit = 1) -> TF_target_select
 
-    calc_jaccard(fill_df = fill_df,
-                 TF_target_select = TF_target_select) -> jaccard_similarity
+    calc_jaccard(
+        fill_df = fill_df,
+        TF_target_select = TF_target_select
+    ) -> jaccard_similarity
 
 
     return(jaccard_similarity)
-
-
-
-
 }
 
 
 #' @importFrom magrittr %>%
 #' @importFrom stats dist
 calc_jaccard <- function(fill_df,
-                         TF_target_select){
-    fill_df %>%
-        dplyr::left_join(TF_target_select) %>%
-        replace(is.na(.), 0) %>%
-        tidyr::pivot_wider(names_from = TF_id,
-                           values_from = hit) -> TF_hit_wide
+                         TF_target_select) {
+
+    suppressMessages(fill_df %>%
+                         dplyr::left_join(TF_target_select) %>%
+                         replace(is.na(.), 0) %>%
+                         tidyr::pivot_wider(
+                             names_from = TF_id,
+                             values_from = hit
+                         ) -> TF_hit_wide)
 
     TF_hit_mt <- as.matrix(TF_hit_wide[, -1])
     rownames(TF_hit_mt) <- TF_hit_wide[[1]]
