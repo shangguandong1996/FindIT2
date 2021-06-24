@@ -12,7 +12,8 @@ integrate_ChIP_RNA(
 )
 }
 \arguments{
-\item{result_geneRP}{the simplify result from calcRP_TFHit(report_fullInfo = FALSE)}
+\item{result_geneRP}{the simplify result from calcRP_TFHit(report_fullInfo = FALSE) or
+RP_df <- metadata(fullRP_hit)$peakRP_gene.}
 
 \item{result_geneDiff}{the result from RNA diff result with three column gene_id,
 log2FoldChange, padj}

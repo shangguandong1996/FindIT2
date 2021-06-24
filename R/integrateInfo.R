@@ -9,7 +9,8 @@ utils::globalVariables(c(
 #'
 #' @importFrom stats ks.test
 #'
-#' @param result_geneRP the simplify result from calcRP_TFHit(report_fullInfo = FALSE)
+#' @param result_geneRP the simplify result from calcRP_TFHit(report_fullInfo = FALSE) or
+#' RP_df <- metadata(fullRP_hit)$peakRP_gene.
 #' @param result_geneDiff the result from RNA diff result with three column gene_id,
 #' log2FoldChange, padj
 #' @param lfc_threshold the threshold which decide significant genes

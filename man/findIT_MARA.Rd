@@ -21,7 +21,8 @@ findIT_MARA(
 
 \item{peakScoreMt}{peak count matrix.}
 
-\item{TF_GR_database}{TF peak GRange with a column named TF_id representing you TF name}
+\item{TF_GR_database}{TF peak GRange with a column named TF_id representing you TF name.
+If you have TF_score column, MARA will consider it. otherwise, MARA will consider each hit is 1.}
 
 \item{log}{whether you want to log your peakScoreMt}
 

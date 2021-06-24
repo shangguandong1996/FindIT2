@@ -18,6 +18,7 @@ TF-target database
 }
 \examples{
 \dontrun{
+# source
 library(dplyr)
 data <- read.table("~/reference/annoation/Athaliana/TF_target/iGRN_network_full.txt",
                   sep = "\t",

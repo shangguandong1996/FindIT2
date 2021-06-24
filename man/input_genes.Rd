@@ -15,6 +15,7 @@ input_genes
 }
 \examples{
 \dontrun{
+# source
 if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
     library(FindIT2)
     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
