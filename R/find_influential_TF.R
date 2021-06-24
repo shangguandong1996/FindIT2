@@ -822,7 +822,8 @@ findIT_enrichInAll <- function(input_feature_id,
 #' @param input_feature_id peaks which you want to find influentail TF for
 #' @param peak_GR all peak sets.Your input_feature_id is a part of it.
 #' @param peakScoreMt peak count matrix.
-#' @param TF_GR_database TF peak GRange with a column named TF_id representing you TF name
+#' @param TF_GR_database TF peak GRange with a column named TF_id representing you TF name.
+#' If you have TF_score column, MARA will consider it. otherwise, MARA will consider each hit is 1.
 #' @param log whether you want to log your peakScoreMt
 #' @param meanScale whether you want to mean-centered per row
 #' @param output one of 'coef' and 'cor'. Default is coef
@@ -964,6 +965,10 @@ findIT_MARA <- function(input_feature_id,
         )
     }
     purrr::map(colnames(peakScoreMt_select), function(sample) {
+        cat(
+            ">> dealing with", sample, "...\t\t",
+            format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        )
         train_data <- merge_df[, c(sample, all_TF)]
         colnames(train_data)[1] <- "value"
 
@@ -990,7 +995,10 @@ findIT_MARA <- function(input_feature_id,
 
         model <- glmnet(x, y, alpha = 0, lambda = cv.out$lambda.min)
         data.frame(coef(model)[-1, 1]) -> activity_df
-        activity_df$TF_id <- rownames(activity_df)
+
+        # it seems that coef will print `ATHB-9` instead of ATHB9
+        # so I gsub these "`"
+        activity_df$TF_id <- gsub("`", "", rownames(activity_df))
         colnames(activity_df)[1] <- sample
         activity_df[, 1] <- INT(activity_df[, 1])
         activity_df <- activity_df[, c(2, 1)]
