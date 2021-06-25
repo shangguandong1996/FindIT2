@@ -99,13 +99,17 @@ payAttention_gene <- function(all_genes,
         data <- reactive(subset(fullRP_GR, gene_id == input$gene))
 
         output$sumRP <- renderTable(sumRP_data[input$gene, , drop = FALSE] %>%
-            tibble::as_tibble(rownames = "gene_id"))
+            tibble::as_tibble(rownames = "gene_id"),
+            caption = "The sumRP of select gene in each samples",
+            caption.placement = getOption("xtable.caption.placement", "top"))
 
         output$gene_percent <- renderTable(percent_data_wider %>%
             dplyr::filter(
                 gene_id == input$gene,
                 TF_id == input$tf
-            ))
+            ),
+            caption = "The influence of select TF in select gene in each samples",
+            caption.placement = getOption("xtable.caption.placement", "top"))
 
 
 
@@ -128,9 +132,14 @@ payAttention_gene <- function(all_genes,
                 TF_id,
                 dplyr::everything()
             ) %>%
-            dplyr::select(-gene_id))
+            dplyr::select(-gene_id),
+        caption = "The detailed RP in each peak hit by select TF",
+        caption.placement = getOption("xtable.caption.placement", "top"))
 
-        output$GRange <- renderTable(data.frame(data()))
+        output$GRange <- renderTable(data.frame(data()),
+                                     caption = "The realted peak information of select gene",
+                                     caption.placement = getOption(
+                                         "xtable.caption.placement", "top"))
     }
 
     shinyApp(ui, server)
@@ -160,7 +169,7 @@ payAttention_TF <- function(all_genes,
         fluidRow(
             column(
                 12,
-                selectInput("sample", "sample_selct",
+                selectInput("sample", "sample_select",
                     choices = all_samples,
                     multiple = TRUE
                 ),
@@ -174,15 +183,21 @@ payAttention_TF <- function(all_genes,
     server <- function(input, output, session) {
         output$TF_pvalue <- renderTable(TF_pvalue[input$tf, , drop = FALSE] %>%
             tibble::as_tibble(rownames = "TF_id"),
-        digits = -2
+        digits = -2,
+        caption = "The p-value of select TF in each samples",
+        caption.placement = getOption("xtable.caption.placement", "top")
         )
 
         output$TF_rank <- renderTable(TF_pvalue_rank[input$tf, , drop = FALSE] %>%
-            tibble::as_tibble(rownames = "TF_id"))
+            tibble::as_tibble(rownames = "TF_id"),
+            caption = "The p-value rank of select TF in each samples",
+            caption.placement = getOption("xtable.caption.placement", "top"))
 
         output$TF_mean_percent <- renderTable(TF_percent[input$tf, , drop = FALSE] %>%
             tibble::as_tibble(rownames = "TF_id"),
-        digits = 3
+        digits = 3,
+        caption = "The mean influence of select TF in each samples(input_gene - background_gene)",
+        caption.placement = getOption("xtable.caption.placement", "top")
         )
 
         output$TF_percent_summary <- renderTable(percent_data %>%
@@ -199,7 +214,9 @@ payAttention_TF <- function(all_genes,
                     dplyr::select(sample_name, dplyr::everything())
             }) %>%
             do.call(rbind, .),
-        digits = 3
+        digits = 3,
+        caption = "The summary about influence of select TF in each samples(input_gene)",
+        caption.placement = getOption("xtable.caption.placement", "top")
         )
 
 
@@ -238,6 +255,7 @@ payAttention_TF <- function(all_genes,
                 v$data
             },
             res = 96
+
         )
     }
 
