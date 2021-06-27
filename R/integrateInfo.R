@@ -51,6 +51,11 @@ integrate_ChIP_RNA <- function(result_geneRP,
         result_geneDiff
     )
 
+    if ("GRanges" %in% class(result_geneRP)) {
+        stop("sorry, please use the the simplify result or metadata(fullRP_hit)$peakRP_gene",
+             call. = FALSE)
+    }
+
     check_colnames(
         colnames = "gene_id",
         result_geneRP
@@ -171,6 +176,7 @@ integrate_ChIP_RNA <- function(result_geneRP,
             vjust = vjustvar,
             label = annotateText
         )) +
+        ggplot2::xlab("RP_rank based on ChIP-Seq") +
         ggplot2::scale_x_continuous(expand = c(0, 0)) -> p
 
     return(p)

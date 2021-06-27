@@ -56,11 +56,32 @@ BiocManager::install("shangguandong1996/FindIT2")
 
 ## Citation
 
+```{r}
+citation("FindIT2")
+```
+
 ## Acknowledgments
+I benefited a lot from X. Shirley Liu lab's tools. The `integrate_ChIP_RNA` model borrow the idea from BETA[@wang_target_2013] and cistromeGO [@li_cistromego_2019]. The `calcRP` model borrow the idea from regulation potential[@wang_modeling_2016]. And the `FindIT_regionRP` model borrow idea from lisa[@qin_lisa_2020].
+I also want to thanks the Allen Lynch in Liu lab, it is please to talk with him on the github about lisa.
+
+I want to thanks for the memberships in our lab. Many ideas in this packages appeared when I talk with them.
 
 ## Introduction
+The origin name of FindIT2 is MPMG(Multi Peak Multi Gene) :), which means this package origin purpose is to do mutli-peak-multi-gene annotation. But as the diversity of analysis increase, it gradually extend its function and rename into FindIT2(Find influential TF and Target). But the latter function are still build on the MPMG. Now, it have five module:
+
+- **Multi-peak multi-gene annotaion(mmPeakAnno module)**
+- **Calculate regulation potential(calcRP module)**
+- **Find influential Target based on ChIP-Seq and RNA-Seq data(Find influential Target module)**
+- **Find influential TF based on different input(Find influential TF module)**
+- **Calculate peak-gene or peak-peak correlation(peakGeneCor module)**
+
+And there are also some other useful function like integrate different source information, calculate jaccard similarity for your TF. I will introduce all these function in below manual. And for each part, I will also show the file type you may need prepare, which can help you prepare the correct file format.
+
+The ChIP and ATAC datasets in this vignettes are from [@wang_chromatin_2020a]. For the speed, I only use the data in chrosome 5.
+
 ```{r "start", message=FALSE}
 # load packages
+# If you want to run this manual, please check you have install below packages.
 library(FindIT2)
 library(TxDb.Athaliana.BioMart.plantsmart28)
 library(SummarizedExperiment)
@@ -68,7 +89,7 @@ library(SummarizedExperiment)
 library(dplyr)
 library(ggplot2)
 
-# because of the fa I use, I change the seqlevels of Txdb
+# because of the fa I use, I change the seqlevels of Txdb to make the chrosome levels consistent
 Txdb <- TxDb.Athaliana.BioMart.plantsmart28
 seqlevels(Txdb) <- c(paste0("Chr", 1:5), "M", "C")
 
@@ -76,19 +97,45 @@ all_geneSet <- genes(Txdb)
 
 ```
 
-
 # Multi-peak multi-gene annotation
+The multi-peak multi-gene annotation(mmPeakAnno) is the basic of this package. Most function will use the result of mmPeakAnno. So I explain them first.
 
-The below ChIP peak databset is from [@wang_chromatin_2020a]
+The object you may need
+
+- **peak_GR: a GRange object with a column named feature_id**
+
+FindIT2 provides `loadPeakFile` to load peak and store in `GRanges` object. Meanwhile, it also rename one of your GRange column name into `feature_id`. The `feature_id` is the most important column in FindIT2, which will be used as a link to join information from different source. The `feature_id` column represents your peak name, which is often the forth column in bed file and the first column in GRange metadata column . If you have a GRange without `feature_id` column, you can rename your first metadata column or just add a column named `feature_id` like below
+
+```{r eval=FALSE}
+# when you make sure your first metadata column is peak name
+colnames(mcols(yourGR))[1] <- "feature_id"
+
+# or you just add a column
+yourGR$feature_id <- paste0("peak_", seq_len(length(yourGR)))
+
+```
+
+- **Txdb: a Txdb object that manages genomic locations and the relationships between genomic feature**
+
+you can see the detailed Txdb description in [Making and Utilizing TxDb Objects](https://bioconductor.org/packages/devel/bioc/vignettes/GenomicFeatures/inst/doc/GenomicFeatures.pdf)
+
+- **input_genes: gene id**
+
+Here I take the ChIP-Seq data as example.
 ```{r "prepare data"}
 # load the test ChIP peak bed
 ChIP_peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
 ChIP_peak_GR <- loadPeakFile(ChIP_peak_path)
 
+# you can see feature_id is in your first column of metadata
 ChIP_peak_GR
 ```
 
+
 ## annotate peak using nearest mode
+
+The nearest mode is the most widely used annotation mode. It will link the peak to its nearest gene, which means every peak only have one related gene. The disadvantage is sometimes you can not link the correct gene for your peak because of the complexity in the genomic feature. But this annotation mode is simple enough and at most time, for most peak, the result is correct.
+The skeleton function is `distanceToNearest` from `GenomicRanges`. I add some modification so that it will output more human readable result.
 
 ```{r "mm_nearestgene"}
 mmAnno_nearestgene <- mm_nearestGene(peak_GR = ChIP_peak_GR,
@@ -98,19 +145,27 @@ mmAnno_nearestgene
 
 ```
 
-
+You can also use this the annotation result to check your TF type using `plot_annoDistance`. For most TF, the distance density plot maybe like below, which means your TF is promotor-type. But for some TF, its density plot will be different, like GATA4, MYOD1[@li_cistromego_2019].
 ```{r}
 plot_annoDistance(mmAnno = mmAnno_nearestgene)
 ```
 
-
-
+Sometimes, you may interested in the number peaks of each gene linked. Or reciprocally, how many genes of each peak link. you can use the `getAssocPairNumber` to see the deatailed number or summary.
 ```{r}
-getAssocPairNumber(mmAnno_nearestgene)
+getAssocPairNumber(mmAnno = mmAnno_nearestgene)
 
+getAssocPairNumber(mmAnno = mmAnno_nearestgene,
+                   output_summary = TRUE)
+
+# you can see all peak's related gene number is 1 because I use the nearest gene mode
 getAssocPairNumber(mmAnno_nearestgene, output_type = "feature_id")
+
+getAssocPairNumber(mmAnno = mmAnno_nearestgene,
+                   output_type = "feature_id",
+                   output_summary = TRUE)
 ```
 
+And if you want the summary plot, you can use the `plot_peakGeneAlias_summary` function.
 ```{r}
 plot_peakGeneAlias_summary(mmAnno_nearestgene)
 plot_peakGeneAlias_summary(mmAnno_nearestgene, output_type = "feature_id")
@@ -118,20 +173,40 @@ plot_peakGeneAlias_summary(mmAnno_nearestgene, output_type = "feature_id")
 
 ## find realted peak using gene Bound mode
 
+The `mm_geneBound` function is designed for finding related peak for your `input_genes`.Because we do the nearest gene mode to annotate peak, once a peak is linked by nearest gene, it will not be linked by another gene even if another gene is very close to your peak. So this function is very useful when you want to plot peak heatmap or volcano plot. When ploting these plot, you often have a interesting gene set, and want to plot related peak. If we just filter gene id in the nearest result, many of your interesting gene will not have related peak. After all, each peak will be assigned once. 
+
+For `mm_geneBound`, it will output realted peak for all your `input_gene` as long as your `input_genes` in your Txdb. The model behind `mm_geneBound` is simple, it will do `mm_nearestgene` first and scan nearest peak for these genes which do not have related peak.
+
 ```{r "mm_geneBound"}
+# The genes_Chr5 is all gene set in Chr5
 genes_Chr5 <- names(all_geneSet[seqnames(all_geneSet) == "Chr5"])
+
+# The genes_Chr5_notAnno is gene set which is not linked by peak
 genes_Chr5_notAnno <- genes_Chr5[!genes_Chr5 %in% unique(mmAnno_nearestgene$gene_id)]
+
+# The genes_Chr5_tAnno is gene set which is linked by peak
 genes_Chr5_Anno <- unique(mmAnno_nearestgene$gene_id)
 
+# mm_geneBound will tell you there 5 genes in your input_genes not be annotated
+# and it will use the distanceToNearest to find nearest peak of these genes
 mmAnno_geneBound <- mm_geneBound(peak_GR = ChIP_peak_GR,
                                  Txdb = Txdb,
                                  input_genes = c(genes_Chr5_Anno[1:5], genes_Chr5_notAnno[1:5]))
 
+# all of your input_genes have related peaks
 mmAnno_geneBound
 
 ```
 
 ## find related peak using gene scan mode
+
+`mm_geneScan` is the most important annotation mode. Strictly, it is not a peak annotation mode. The function will define a TSS scan region for each gene according to your upstream and downstream parameters. Then it will fish all peaks located in scan region and link gene with peak scaned. For these peak not locating in the scan region, it will use the `distanceToNearest` to find nearest gene. After these steps, each peak will have at least one gene. But not all genes on your Txdb will have at least one peak, after all, there maybe no peak locating in  scan region for these gene. Now, compared with `mm_nearestgene` result, gene may be linked by more than one peak, and peak maybe linked by more than one gene.
+
+The `mm_geneScan` can be used in many conditions. For example, after differential peak analysis, you may have 300 diff peaks. Or if your ChIP-Seq peak experiment not work very well, you only have 100 peaks. You do not want to use the `mm_nearestgene` because you do not want to lose some important candidate gene and you also do not want to see each peak in IGV. Now you can use `mm_geneScan`, just set parameters like `upstream=500` , everything will be different. This function is especially useful for small genome because the complexity in genomic feature location. Expect the origin nearest mode result, the final result will output other peak-gene links. 
+
+But I do not recommend you use the `mm_geneScan` mode or set `upstream/downstream` to big when you have too many peaks, it will make your final result messy. For this condition, you can use the `mm_nearestgene` or set `upstream/downstream` small.
+
+The true power of `mm_geneScan` is that it is the foundation of other module, like `calcRP`, `FindIT`. And in these condition, the upstream and downstream parameter should be set big, like 2e4, 2e5, 2e6 and so on.
 
 ```{r "mm_geneScan"} 
 mmAnno_geneScan <- mm_geneScan(peak_GR = ChIP_peak_GR,
@@ -143,6 +218,7 @@ mmAnno_geneScan
 
 ```
 
+you can also apply below function in the result of `mm_geneScan`.
 ```{r}
 getAssocPairNumber(mmAnno_geneScan)
 
@@ -156,15 +232,83 @@ plot_peakGeneAlias_summary(mmAnno_geneScan, output_type = "feature_id")
 
 # Calculate regulation potential(RP)
 
+regulation potential(RP) is a simple but powerful theory to convert peak level information into gene level. After this transform, analysis will be much easier. After all, peak do not have id while gene have. The detailed theory about RP can be seen in [@wang_modeling_2016], [@li_cistromego_2019], [@qin_lisa_2020]. 
+
+The object you may need:
+
+- **mmAnno: the result from mm_geneScan**
+
+The upstream/downstream parameters of `mm_geneScan` should be big enough. The RP model actually consider all peaks in TSS scan region. And each peak will be assigned a weight when calculating final RP. The weight decreases with peak distance from the TSS of gene. For Arabidopsis thaliana, I set the parameter is 2e4. Because it is the longest interaction distance in HiC data[@liu_genomewide_2016]. For human or mouse data, you can set 100kb(1e5). It is the origin parameters in paper.
+
+Actually, the upstream/downstream parameters can be arbitrary because it only influence the number of scaned peak. The another important parameter is `decay_dist`, which control the weight of peak. If you set `decay_dist` to 1000, a peak 1kb from the TSS contribute one-half of that at TSS. For example, if a value of peak is 100, and its distance to TSS is 1000, so the final value contributing to the gene will be `100 * 2 ^ -(1000 / 1000) = 50`.
+
+- **Txdb**
+
+
 ## calculate RP using mmAnno
+
+The `calcRP_TFHit` here is to calculate RP according to your TF ChIP-seq annotation result. The theory behind this is that if there are more peaks near your gene, then your gene is more likely to be the target. You can use the result to decide your TF target gene or combine with RNA-Seq data using `integrate_ChIP_RNA` to infer direct target genes more accurately.
+
+The object you may need to consider:
+
+- decay_dist:
+
+You can set decay_dist to 1000 for promoter-type TF and 10 kb for enhancer-type TF. But you can set the decay_dist by yourself. You can use the plot from `plot_annoDistance(mmAnno_nearestgene)` to decide your TF type. 
+
+- mmAnno
+
+The result from `mm_geneScan`. `calcRP_TFHit` will use the peak-gene pair in mmAnno to calculate the contribution of each peak to the final RP of the gene. 
+
+
+The detailed formula used in `calcRP_TFHit` shows below.
+
+$$
+\begin{equation}
+  RP_{gene_{g}}=\sum_{p=1}^{k}RP_{peak_p, gene_g}
+  (\#eq:formula1)
+\end{equation}
+$$
+
+$$
+\begin{equation}
+  RP_{peak_p, gene_g} = score_{peak_p} * 2^{\frac{-d_{i}}{d_0}}
+  (\#eq:formula2)
+\end{equation}
+$$
+
+The parameter $d_0$ is the half_decay distance(`decay_dist`). All k binding sites in the scan region of gene g(within the upstram-TSS-downstream) will be used in the calculation, $d_i$ is the distance between the ith peak’s center and TSS. The $score_{peak_{p}}$ represent your `feature_score` column if your origin GRange have a column named `feature_score`, otherwise, it will be 1.
+
+The `feature_score` always be the fifth column in bed file and maybe the second column in your GRange metadata column.
+```{r}
+# Here you can see the score column in metadata
+ChIP_peak_GR
+
+# I can rename it into feature_score
+colnames(mcols(ChIP_peak_GR))[2] <- "feature_score"
+
+ChIP_peak_GR
+
+```
+
+For the normal ChIP-seq data, adding or not this column will not make much difference to the result. Because peaks which are closer to the TSS always have big feature_score. But for those tag or GR-induced ChIP-seq data, the above assumptions may not be satisfied. In this condition, you can add a column named `feature_score` representing your confidence about each peak. And `feature_score` in this situation may not be the second column in your GRange metadata column. You should decide it by yourself.
+
+There are advantages and disadvantages to adding `feature_score`. On the one hand, you can add your confidence to make the final TF target result more credible. On the other hand, adding this column will make your result less human-readable. And if you want to adjust your TF result considering the background from batch existing ChIP-seq data to get the more accurate and specific function of the TF. You should not add the `feature_score` column because different scoure ChIP-Seq data have different bias(the background data will be be ready soon).
 
 ```{r "calcRP_TFHit"}
 # if you just want to get RP_df, you can set report_fullInfo FALSE
 fullRP_hit <- calcRP_TFHit(mmAnno = mmAnno_geneScan,
                            Txdb = Txdb,
+                           decay_dist = 1000,
                            report_fullInfo = TRUE)
 
+# if you set report_fullInfo to TRUE, the result will be a GRange object
+# it maintain the mmAnno_geneScan result and add other column, which represent the  contribution of each peak to the final RP of the gene
+fullRP_hit
+
+# or you can directly extract from metadata of your result
 peakRP_gene <- metadata(fullRP_hit)$peakRP_gene
+
+# The result is ordered by the sumRP and you can decide the target threshold by yourself
 peakRP_gene
 
 ```
@@ -172,6 +316,47 @@ peakRP_gene
 
 
 ## Calculate RP using bw file
+
+The `calcRP_coverage` here is to calculate RP based on the ATAC or other histone modification bigwig file. 
+
+The object you may need to consider:
+
+- bwFile:
+
+A bigwig file. And if you want to compare gene RP between samples, the bigwig file should be normalized.
+
+- decay_dist:
+
+You can set 10kb for human/mouse data and set 1kb for Arabidopsis thaliana data.
+
+- scan_dist:
+
+You can set 100kb for human/mouse data and set 20kb for Arabidopsis thaliana data.
+
+- Chrs_included:
+
+The Chromosomes where you want to calculate gene RP in. Here I set Chr5 because I only use the test data in Chr5. Sometimes, we just want to the calculate gene RP in some chromosomes. For example, we do not want to calculate gene RP in mitochondrion. The less chrom you select, the faster function calculates.
+
+It can be applied in the condition that you just have bigwig files from GEO. The purpose here is not to identify the target of TF ChIP-Seq. The real purpose is to summarize the ATAC, H3K27ac, or other histone modification profiles and convert into gene level information. The RP score can be a useful predictor of gene expression changes and a summary representing histone modification in your gene. You can compare gene RP in different samples and explore the RP trend. Or you can use RP in the identification of key tissue-specific genes. The detailed application can be seen in [@wang_modeling_2016].
+
+The detailed formula used in `calcRP_coverage` is a little different from the previous \@ref(eq:formula1),  \@ref(eq:formula2).
+$$
+\begin{equation}
+  RP_{gene_{g}}=\sum_{i\in[t_g-L,tg+L]}w_iS_i
+  (\#eq:formula3)
+\end{equation}
+$$
+$$
+\begin{equation}
+  w_i=\frac {2e^{-\mu d}} {1+e^{-\mu d}}
+  (\#eq:formula4)
+\end{equation}
+$$
+$L$ is set to `scan_dist`, and $w_i$ is a weight representing the regulatory influence of a locus at position $i$ on the TSS of gene $g$ at genomic position $t_k$. $d = |i − t_{g}|/L$, and $i$ stands for ith nucleotide position within the $[−L, L]$ genomic interval centered on the TSS at $t_g$. $s_i$ is the signal of at position $i$. μ is the parameter to determine the decay rate of the weight, which is
+defined as $\mu = -ln\frac{1}{3} * (L/\Delta)$. $\Delta$ is set to `decay_dist`.
+
+
+
 ```{r "calcRP_bw"}
 
 bwFile <- system.file("extdata", "E50h_sampleChr5.bw", package = "FindIT2")
@@ -183,10 +368,30 @@ head(RP_df)
 
 ```
 
-## Calculate RP using mmAnno result and peakScore matrix
+## Calculate RP using mmAnno result and peakScore matrix{#RP}
+
+The `calcRP_region` here is to calculate RP according to your ATAC peak file and ATAC norm Count matrix.
+
+The object you may need to consider:
+
+- peak_GR: 
+
+if you have several samples, it should be the merge peak set from these samples
+
+- peakScoreMt: 
+
+the ATAC norm Count matrix. you can use different normalized ways to norm the origin peak count matrix, like CPM, FPKM, quantile, DESeq2, edgeR and so on.
+
+- Chrs_included:
+
+The Chromosomes where you want to calculate gene RP in. Here I set Chr5 because I only use the test data in Chr5. It do not have a effect on the speed. If your peak all on the Chr5, and I set Chrs_included to Chr1 and Chr5, then all gene RP in Chr1 will be filled with 0.
+
+The calculation formula is same as \@ref(eq:formula1),  \@ref(eq:formula2). But it do not use the `feature_score` in peak_GR. Instead, it will use the count in `peakScoreMt`. THis is why the count matrix should be normalized firstly. The class of `calcRP_region` result is a [MultiAssayExperiment](https://bioconductor.org/packages/release/bioc/html/MultiAssayExperiment.html) object containing detailed peak-RP-gene relationship and sumRP info. The `calcRP_region` result can be as the input of `findIT_regionRP` to find the influential TF.
+
 ```{r "calcRP_region"}
 data("ATAC_normCount")
 
+# This ATAC peak is the merge peak set from E50h-72h
 ATAC_peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
 ATAC_peak_GR <- loadPeakFile(ATAC_peak_path)
 
@@ -195,14 +400,17 @@ mmAnno_regionRP <- mm_geneScan(ATAC_peak_GR,
                                upstream = 2e4,
                                downstream = 2e4)
 
+# This ATAC_normCount is the peak count matrix normilzed by DESeq2
 calcRP_region(mmAnno = mmAnno_regionRP,
               peakScoreMt = ATAC_normCount,
               Txdb = Txdb,
               Chrs_included = "Chr5") -> regionRP
 
+# The sumRP is a matrix representing your geneRP in every samples
 sumRP <- assays(regionRP)$sumRP
 head(sumRP)
 
+# The fullRP is a detailed peak-RP-gene relationship
 fullRP <- assays(regionRP)$fullRP
 head(fullRP)
 
@@ -210,11 +418,29 @@ head(fullRP)
 
 # Find influential target
 
+`integrate_ChIP_RNA` can combine ChIP-Seq with RNA-Seq data to find target gene more accurately.
+
+The object you may need:
+
+- **result_geneRP:**
+
+The data.frame object representing target rank from `calcRP_TFHit` (set`report_fullInfo=FALSE`) or `metadata(fullRP_hit)$peakRP_gene`.
+
+- **result_geneDiff:**
+
+The RNA-Seq diff data.frame, it should be have three column:gene_id, log2FoldChange, padj.
+
+Differential expression analysis result between TF perturbations (i.e. stimulation, repression, knock-down or knockout) and controls is an alternative approach for predicting TF targets. However, it is difficult to determine whether the differentially expressed genes in such experiments are direct targets of the TF using expression profile only. Therefore, ChIP-seq peaks adding differential expression information upon TF perturbation could be used to discriminate between directly regulated genes and secondary effects more accurately. 
+
+The theory behind `integrate_ChIP_RNA` is simple. It will firstly rank the diff result according to the padj value then integrate the ChIP and RNA data using the rank-product. If a gene is in the top rank of `calcRP_TFHit` and RNA-Seq, then it will be the top target in final result. The `integrate_ChIP_RNA` will also predict your TF function. It will divide genes into three groups according to expression pattern, up-regulated, down-regulated or unchanged. The threshold deciding groups is `lfc_threshold` and `padj_threshold` parameters.
+
 ```{r "findITarget"}
 data("RNADiff_LEC2_GR")
 integrate_ChIP_RNA(result_geneRP = peakRP_gene,
                    result_geneDiff = RNADiff_LEC2_GR) -> merge_result
 
+# you can see compared with down gene, there are more up gene on the top rank in ChIP-Seq data
+# In the meanwhile, the number of down gene is less than up
 merge_result
 
 # if you want to extract merge target data
@@ -223,32 +449,50 @@ target_result
 
 ```
 
-# Find influential TF(IT)
+# Find influential TF
 
-解释下
-when you have
-- select peak (from Kmeans, diff analysis and so on)
-- peak_GR(ATAC/H3K27me3 GRange with feature_id column)
-- TF_GR_database(can from public TF database or motif scan in ATAC/H3K27me3 data,
-it have TF_id column)
-- powerful computer(shuffle will be slow if not using multi-threads)
+Find influential TF contains some function to help you find TF based on your input or analysis type. You can find detailed case in each function section.
 
+The object you may need
+
+- **input_genes: the gene set you want to find infulential TF for**
+
+- **input_feature_id: the peak set you want to find infulential TF for**
+
+The input_feature_id should be a part of the total peak set. You can use methods such as kmeans or differential analysis to get the feature id set you are interested in.
+
+- **peak_GR:a GRange object with a column named feature_id**
+
+The peak GRange can be from ATAC, H3K27ac, or some other histone modification peak data which you believe TF hit in. `input_feature_id` should be a part of this GRange's feature id set.
+
+- **TF_GR_database: a GRange object with a column named TF_id**
+
+The TF_GR_database can be from public TF database, or motif scan in ATAC/H3K27ac data. If your data is from model species, like human/mouse or A. thaliana, there are some wonderful public ChIP-Seq database, like [cistrome](http://cistrome.org/db), [Remap](https://remap.univ-amu.fr/), [unibind](https://unibind.uio.no/). For those species that do not have good database, you can use motif scan tools like [meme suite](https://meme-suite.org/meme/), [HOMER](http://homer.ucsd.edu/homer/motif/), [GimmeMotifs](https://gimmemotifs.readthedocs.io/en/stable/), [motifmatchr](https://bioconductor.org/packages/release/bioc/html/motifmatchr.html) to find your motif location in your ATAC peak to represent TF occupy. And if you do not have TF database or ATAC-Seq in hand, you can also try some other database like [PLAZA](https://bioinformatics.psb.ugent.be/plaza/), [plantTFDB](http://planttfdb.gao-lab.org/download.php), which use the evolutionary conservation to find the motif occupy. But I do not recommend it, it can not represent your sample specific TF occupy profile.
+
+Regardless of whether you use public TF ChIP-Seq or motif scan result, all you need to do is to import the bed file like above and rename one of column into `TF_id`. The `TF_id` is same as `feature_id`, which always the forth column in bed file and the first column in GRange metadata column. For `TF_GR_database`, each site is not important, what is important is the set of sites represented by each `TF_id`. The `TF_id` is important column when using findIT module, so please make sure add correctly.
 
 ```{r "prepare_for_findIT"}
 
+# Here I take the top50 gene from integrate_ChIP_RNA as my interesting gene set.
 input_genes <- target_result$gene_id[1:50]
 
+# I use mm_geneBound to find related peak, which I will take as my interesting peak set.
 related_peaks <- mm_geneBound(peak_GR = ATAC_peak_GR,
                               Txdb = Txdb,
                               input_genes = input_genes)
 input_feature_id <- unique(related_peaks$feature_id)
 
 # AT1G28300 is LEC2 tair ID
+# I add a column named TF_id into my ChIP Seq GR
 ChIP_peak_GR$TF_id <- "AT1G28300"
 
-# add TF_GR_database from Remap2020
+# And I also add some other public ChIP-Seq data
 TF_GR_database_path <- system.file("extdata", "TF_GR_database.bed.gz", package = "FindIT2")
 TF_GR_database <- loadPeakFile(TF_GR_database_path)
+TF_GR_database
+
+# rename feature_id column into TF_id
+# because the true thing I am interested in is TF set, not each TF binding site.
 colnames(mcols(TF_GR_database))[1] <- "TF_id"
 
 # merge LEC2 ChIP GR
@@ -260,41 +504,45 @@ TF_GR_database
 
 ## Find IT of input peak based on shuffle
 
-when you have
-- select peak (from Kmeans, diff analysis and so on)
-- ATAC/H3K27me3
-- TF_GR_database(can from public TF database or motif scan in ATAC/H3K27me3 data)
-- powerful computer(shuffle will be slow if not using multi-threads)
+When collecting several samples ATAC data and get a merge peak set, you do k-means to cluster peak. Then you want to know which TF is enrichment in your specific peak set compared with the total peak set. In this condition, you can use the `findIT_enrichInShuffle`, it will sample same set number feature_id as your `input_feature_id`, then it will calculate the p-value to mark the significant of specific TF.
+
+The object you may need to consider:
+
+- shuffleN: 
+
+The more you sample, the more accurate the final result. But it will make function run more time.
 
 ```{r "findIT_enrichInShuffle"}
+# For repeatability of results, you should set seed.
 set.seed(20160806)
 findIT_enrichInShuffle(input_feature_id = input_feature_id,
                        peak_GR = ATAC_peak_GR,
                        TF_GR_database = TF_GR_database,
                        shuffleN = 10) -> result_enrichInShuffle
+
+# you can see AT1G28300 is top1
 result_enrichInShuffle
 
 ```
 
 ## Find IT of input peak based on fisher test
 
-when you have
-- select peak (from Kmeans, diff analysis and so on)
-- ATAC/H3K27me3
-- TF_GR_database(can from public TF database or motif scan in ATAC/H3K27me3 data)
+You can also find the enrichment of TF using `findIT_enrichInAll`, it use the same theory like GO-enrich analysis. The background is total ATAC peak, and the select set is your `input_feature_id`. Compared with `findIT_enrichInShuffle` above, its runs more quickly. But it will have a little problem when using motif scan result as `TF_GR_database`. A TF may hit more than one time in a peak, however, here I treat it as one because I want the whole frame to be more like GO enrichment analysis. Actually, the TF hit number can offer some other useful information, which you can see in `findIT_MARA`. But it will do not have a big effect on the final result. After all, what we really need is TF rank instead of p-value.
 
 ```{r "findIT_enrichInAll"}
 findIT_enrichInAll(input_feature_id = input_feature_id, 
                    peak_GR = ATAC_peak_GR, 
                    TF_GR_database = TF_GR_database) -> result_enrichInAll
 
+# you can see AT1G28300 is top1
 result_enrichInAll
 
 ```
 
-you can parse your result_result_enrichInAll
+In the meanwhile, you can parse your result using `jaccard_findIT_enrichInAll`, which can help you find co-occupy TF in your `input_feature_id`. But please note you should not input too much TF_id in `input_TF_id` because it will run slowly. You can use the top rank gene as `input_TF_id`.
 
 ```{r}
+# Here I use the top 4 TF id to calculate jaccard similarity of TF
 jaccard_findIT_enrichInAll(input_feature_id = input_feature_id,
                            peak_GR = ATAC_peak_GR,
                            TF_GR_database = TF_GR_database,
@@ -310,21 +558,33 @@ enrichAll_jaccard
 
 ```
 
-
 ## Find IT of input genes based on fisher test
 
-```{r "findIT_TTPair"}
+The `findIT_TTPair` also use the fisher test like `findIT_enrichInAll`. The difference is your input set is gene id instead of feature id. And it means that your database should be the `TF_target_database` like this.
+
+```{r}
 data("TF_target_database")
 
+# it should have two column named TF_id and target_gene.
+head(TF_target_database)
+
+```
+
+This function is very useful when you have a interesting gene set producing from some analysis like k-means in RNA-Seq data, WGCNA, single cell analysis. The test `TF_target_database` here is downloaded from [iGRN](http://bioinformatics.psb.ugent.be/webtools/iGRN/pages/download).
+
+```{r "findIT_TTPair"}
+# By default, TTpair will consider all target gene as background
+# Because I just use part of true TF_target_database, the background calculation is not correct. so I use all gene in Txdb as gene_background.
 result_TTpair <- findIT_TTPair(input_genes = input_genes,
                                TF_target_database = TF_target_database,
                                gene_background = names(all_geneSet))
 
+# you can see AT1G28300 is top1
 result_TTpair
 
 ```
 
-you can parse your result_TT pair
+You can parse your result_TT using `jaccard_findIT_TTpair`.
 
 ```{r}
 
@@ -344,9 +604,18 @@ TTpair_jaccard
 
 ## Find IT of input genes based on TF hit
 
-```{r "findIT_TFHit"}
+Even though `findIT_TTpaior` is a very useful tool for finding TF when you have a interesting gene set. But for most species, it do not have a database like `TF_target_database`, so I write `findIT_TFHit`. You can think it run `calcRP_TFhit` for each TF in your `TF_GR_database`. Compared with background gene, the TF have a effect on your `input_genes` will produce more significant p-value.
 
+```{r "findIT_TFHit"}
+# For repeatability of results, you should set seed.
 set.seed(20160806)
+
+# the meaning of scan_dist and decay_dist is same as calcRP_TFHit
+# the Chrs_included control the chromosome your background in 
+# the background_number control the number of background gene
+
+# If you want to compare the TF enrichment in your input_genes with other gene set
+# you can input other gene set id into background_genes
 result_TFHit <- findIT_TFHit(input_genes = input_genes,
                              Txdb = Txdb,
                              TF_GR_database = TF_GR_database,
@@ -355,14 +624,17 @@ result_TFHit <- findIT_TFHit(input_genes = input_genes,
                              Chrs_included = "Chr5",
                              background_number = 3000)
 
+# you can see AT1G28300 is top1
 result_TFHit
 
 ```
 
 ## Find IT of input genes based on region RP
 
-```{r}
+Do you remember the `regionRP` we calculated earlier in (section \@ref(RP)?) Now we use the result to find TF for your input_genes. Compared with `findIT_TFHit`, it use the RP information and calculate each TF influence on each input_genes, and then compare the influence distribution of input genes with background genes. The advantage of `findIT_regionRP` is that it it provides richer information for user. The theory behind of `findIT_regionRP` is from [lisa](https://github.com/AllenWLynch/lisa). 
 
+```{r}
+# For repeatability of results, you should set seed.
 set.seed(20160806)
 result_findIT_regionRP <- findIT_regionRP(regionRP = regionRP,
                                           Txdb = Txdb,
@@ -370,27 +642,28 @@ result_findIT_regionRP <- findIT_regionRP(regionRP = regionRP,
                                           input_genes = input_genes,
                                           background_number = 3000)
 
+# The result object of findIT_regionRP is MultiAssayExperiment, same as calcRP_region
+# TF_percentMean is the mean influence of TF on input genes minus background, which represent the total influence of specific TF on your input genes
 TF_percentMean <- assays(result_findIT_regionRP)$TF_percentMean
 TF_pvalue <- assays(result_findIT_regionRP)$TF_pvalue
 
 ```
 
-尽管其p-value由于，你输入的是所有样本综合的peak，然后基因组比较小，使得你的每个输入基因只有一个比较重要的peak，那么这个peak不管变化有多大，percent都不会变。同时，你需要知道p-value的真正含义。但是其真正的长处在于其折叠与扩展性。取决于你的目的，你可以建立多种类型的矩阵
+The true power of `findIT_regionRP` is that it provide multidimensional data: gene_id, TF_id, feature_id and sample_id. You can fold, unfold and combine with them in different ways.
 
-- 行为TF，列为时间点/样本，数值为percentMean
-- 在单个时间点/样本里面，行为基因，列是TF，数值为percent
-- 挑选某个TF，行为基因，列为时间点/样本，数值为percent
+- **row is TF_id，column is sample_id，the value in matrix is TF percentMean**
 
-分别的提取代码为：
-
-`行为TF，列为时间点/样本，数值为percentMean`
+In this condition, we can see the each TF total influence trend on input genes set between samples
 ```{r}
 TF_percentMean
 
 heatmap(TF_percentMean, Colv = NA, scale = "none")
 ```
 
-`在单个时间点/样本里面，行为基因，列是TF，数值为percent`
+- **select specific sample_id，row is gene_id, column is TF_id，the value in matrix is each TF percent on each gene in specific sample**
+
+In this condition, we can see the influence of each TF on each gene in the specific sample.
+
 ```{r}
 metadata(result_findIT_regionRP)$percent_df %>% 
     filter(sample == "E5_0h_R1") %>% 
@@ -406,7 +679,10 @@ heatmap(E50h_TF_mt, scale = "none")
 
 ```
 
-`挑选某个TF，行为基因，列为时间点/样本，数值为percent`
+- **select specific TF_id，row is gene_id, column is sample_id，the value in matrix is specific TF percent on each gene in each sample**
+
+In this condition, we can see the influence trend of specific TF on each gene between samples.
+
 ```{r}
 metadata(result_findIT_regionRP)
 
@@ -422,9 +698,11 @@ heatmap(LEC2_percent_mt, Colv = NA, scale = "none")
   
 ```
 
-parse result using
+
+If above analysis is too complex for you, I also provide the shiny function `shinyParse_findIT_regionRP` to help you parse and understend the result.
 
 ```{r, eval = FALSE}
+# Before using shiny function, you should merge the regionRP and result_findIT_regionRP firstly.
 merge_result <- c(regionRP, result_findIT_regionRP)
 shinyParse_findIT_regionRP(merge_result = merge_result, mode = "gene")
 
@@ -433,11 +711,15 @@ shinyParse_findIT_regionRP(merge_result = merge_result,mode = "TF")
 
 ## Find IT of input genes based on motif activity response
 
+`findIT_regionRP` is a useful tool, but I find for small genome like Arabidopsis thaliana, it can not provide much information about TF total influence trend on input genes set between samples. So I write `findIT_MARA` to see the TF influence trend between samples. The advantage is that it can provide more valuable result compared with `findIT_regionRP` when you want to see the total trend. But the disadvantage is that it can not offer you the detailed informatin on each gene. And the most important thing is it use the `input_feature_id` as input, so you should use `mm_geneBound`, `peakGeneCor`, `enhancerPromoterCor` to find related peak for your input genes.
+
+The theory behind `findIT_regionRP` is from Motif Activity Response Analysis[@thefantomconsortium_transcriptional_2009]. And I also borrow the idea from gimmeMotifs maelstrom[@bruse_gimmemotifs_2018].
+
+**And please note that the TF_GR_database here should be the motif scan in your ATAC peak instead of public ChIP-Seq!!!**. Because I use the linear function to combine with TF, which means TF will influence each other. And for other function in `findIT` module, each TF result is orthogonal with each other.
+
 ```{r}
-# This MARA is similar with 
-# https://gimmemotifs.readthedocs.io/en/master/tutorials.html#find-differential-motifs
-# please pay attention that it do not work in only several TF and several promoter
-# which you can see
+
+# For repeatability of results, you should set seed.
 set.seed(20160806)
 findIT_MARA(input_feature_id = input_feature_id,
             peak_GR = ATAC_peak_GR,
@@ -446,17 +728,10 @@ findIT_MARA(input_feature_id = input_feature_id,
             log = TRUE,
             meanScale = TRUE) -> result_findIT_MARA
 
+
+# Please note that you should add the total motif scan data in TF_GR_database
+# Here I just use the test public ChIP-Seq data, so the result is not valuable
 result_findIT_MARA
-
-findIT_MARA(input_feature_id = input_feature_id,
-            peak_GR = ATAC_peak_GR,
-            peakScoreMt = ATAC_normCount,
-            TF_GR_database = TF_GR_database,
-            log = TRUE,
-            meanScale = TRUE,
-            output = "cor")
-
-
 
 ```
 
@@ -479,6 +754,8 @@ integrate_replicates(mt = MARA_mt,
 ```
 
 ## integrate result
+
+If you have p-value or rank value from different source, you can combine them using `integrate_replicates`.
 
 ```{r}
 list(TF_Hit = result_TFHit,

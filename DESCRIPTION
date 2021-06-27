@@ -8,7 +8,11 @@ Authors@R:
     email = "shangguandong1996@163.com",
     comment = c(ORCID = "0000-0002-9509-0314"))
     )
-Description: What the package does (one paragraph).
+Description: This package implements functions to find influential TF and target based on different input type.
+    It have five module:Multi-peak multi-gene annotaion(mmPeakAnno module), Calculate regulation potential(calcRP module), 
+    Find influential Target based on ChIP-Seq and RNA-Seq data(Find influential Target module),
+    Find influential TF based on different input(Find influential TF module), Calculate peak-gene or peak-peak correlation(peakGeneCor module),
+    And there are also some other useful function like integrate different source information, calculate jaccard similarity for your TF.
 License: Artistic-2.0
 URL: https://github.com/shangguandong1996/FindIT2
 BugReports: https://support.bioconductor.org/t/FindIT2
