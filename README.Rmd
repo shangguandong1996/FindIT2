@@ -18,7 +18,15 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of `FindIT2` is to ...
+This package implements functions to find influential TF and target based on different input type.It have five module
+
+- Multi-peak multi-gene annotaion(mmPeakAnno module)
+- Calculate regulation potential(calcRP module)
+- Find influential Target based on ChIP-Seq and RNA-Seq data(Find influential Target module)
+- Find influential TF based on different input(Find influential TF module)
+- Calculate peak-gene or peak-peak correlation(peakGeneCor module)
+
+And there are also some other useful function like integrate different source information, calculate jaccard similarity for your TF. I will introduce all these function in vignettes. 
 
 ## Installation instructions
 

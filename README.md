@@ -6,7 +6,20 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of `FindIT2` is to …
+This package implements functions to find influential TF and target
+based on different input type.It have five module
+
+-   Multi-peak multi-gene annotaion(mmPeakAnno module)
+-   Calculate regulation potential(calcRP module)
+-   Find influential Target based on ChIP-Seq and RNA-Seq data(Find
+    influential Target module)
+-   Find influential TF based on different input(Find influential TF
+    module)
+-   Calculate peak-gene or peak-peak correlation(peakGeneCor module)
+
+And there are also some other useful function like integrate different
+source information, calculate jaccard similarity for your TF. I will
+introduce all these function in vignettes.
 
 ## Installation instructions
 
@@ -32,7 +45,7 @@ BiocManager::install("shangguandong1996/FindIT2")
 
 ## Document
 
-If you want to download development version from github and view vignettes using
+If you want to download development version and view vignettes using
 `browseVignettes(FindIT2)`, your R version should be 4.0 or greater
 according to this
 [issue](https://github.com/Bioconductor/BiocStyle/issues/78) because I
