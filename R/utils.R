@@ -76,13 +76,11 @@ check_parameter_length <- function(mmAnno, decay_dist) {
     }
 }
 
-
+#' @importFrom methods is
 check_colnames <- function(colnames,
                            data) {
 
-    GRanges_check <- "GRanges" %in% class(data)
-
-    if (GRanges_check) {
+    if (is(data, "GRanges")) {
         check_result <- colnames %in% colnames(mcols(data))
     } else {
         check_result <- colnames %in% colnames(data)
@@ -151,7 +149,7 @@ quiet <- function(x) {
     invisible(force(x))
 }
 
-
+#' @importFrom methods is
 calcQvalue <- function(pvalue){
     # compare with BH, qvalue is more soft
     qvalue_result <- tryCatch(qvalue::qvalue(
@@ -162,7 +160,7 @@ calcQvalue <- function(pvalue){
     error = function(e) NULL
     )
 
-    if (class(qvalue_result) == "qvalue") {
+    if (is(qvalue_result, "qvalue")) {
         qvalues <- qvalue_result$qvalues
     } else {
         qvalues <- NA
