@@ -33,8 +33,13 @@ data.frame
 calculate regulatory potential using big wig files, which is useful for ATAC
 or H3K27ac histone modification data.
 }
+\details{
+Please note that because of rtracklayer::import has some issue on 32 bit R of windows, so the
+calcRP_coverage can not work on this system. But if your R is 64 bit,
+which now be applied on the most windows R, this function still work.
+}
 \examples{
-if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
+if (.Platform$OS.type != "windows" & require(TxDb.Athaliana.BioMart.plantsmart28)) {
     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
     bwFile <- system.file("extdata", "E50h_sampleChr5.bw", package = "FindIT2")

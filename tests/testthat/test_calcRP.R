@@ -5,17 +5,18 @@ seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
 
 bwFile <- system.file("extdata", "E50h_sampleChr5.bw", package = "FindIT2")
 
-test_that("calcRP_coverage test",{
-    quiet(RP_df <- calcRP_coverage(
-        bwFile = bwFile,
-        Txdb = Txdb,
-        Chrs_included = "Chr5"
-    ))
+if (.Platform$OS.type != "windows") {
+    test_that("calcRP_coverage test",{
+        quiet(RP_df <- calcRP_coverage(
+            bwFile = bwFile,
+            Txdb = Txdb,
+            Chrs_included = "Chr5"
+        ))
 
-    expect_equal(RP_df$sumRP[2], 0.65769128)
-    expect_equal(RP_df$gene_id[2], "AT5G01060")
-})
-
+        expect_equal(RP_df$sumRP[2], 0.65769128)
+        expect_equal(RP_df$gene_id[2], "AT5G01060")
+    })
+}
 
 test_that("calcRP_region test",{
     data("ATAC_normCount")
