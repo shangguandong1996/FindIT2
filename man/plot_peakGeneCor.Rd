@@ -21,7 +21,7 @@ plot_peakGeneCor(
 
 \item{addFullInfo}{whether add full feature info on plot}
 
-\item{sigShow}{one of 'pvalue' 'p_adj' 'qvalue'}
+\item{sigShow}{one of 'pvalue' 'padj' 'qvalue'}
 }
 \value{
 ggplot2 object

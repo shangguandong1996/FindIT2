@@ -129,7 +129,7 @@ peakGeneCor <- function(mmAnno,
 
     mmAnno_left$cor <- cor_mt[, 1]
     mmAnno_left$pvalue <- cor_mt[, 2]
-    mmAnno_left$p_adj <- p.adjust(mmAnno_left$pvalue)
+    mmAnno_left$padj <- p.adjust(mmAnno_left$pvalue)
     mmAnno_left$qvalue <- calcQvalue(mmAnno_left$pvalue)
 
     mmAnno <- sort(c(mmAnno_drop, mmAnno_left))
@@ -291,7 +291,7 @@ enhancerPromoterCor <- function(peak_GR,
     # we do not need result about feature_id's own correlation
     mm_scan <- subset(mm_scan, feature_id != promoter_feature)
 
-    mm_scan$p_adj <- p.adjust(mm_scan$pvalue)
+    mm_scan$padj <- p.adjust(mm_scan$pvalue)
 
     mm_scan$qvalue <- calcQvalue(mm_scan$pvalue)
 

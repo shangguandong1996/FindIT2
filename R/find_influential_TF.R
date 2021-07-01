@@ -400,7 +400,7 @@ findIT_TTPair <- function(input_genes,
             num_TFHit_input = num_topLeft
         ) %>%
         dplyr::select(TF_id, num_TFHit_input, inputRatio, bgRatio, pvalue, odds_ratio) %>%
-        dplyr::mutate(p.adj = p.adjust(pvalue),
+        dplyr::mutate(padj = p.adjust(pvalue),
                       qvalue = calcQvalue(pvalue),
                       rank = rank(pvalue)) %>%
         dplyr::arrange(pvalue) -> final_result
@@ -804,7 +804,7 @@ findIT_enrichInAll <- function(input_feature_id,
             num_TFHit_inputFeature = num_topLeft
         ) %>%
         dplyr::select(TF_id, num_TFHit_inputFeature, inputRatio, bgRatio, pvalue, odds_ratio) %>%
-        dplyr::mutate(p.adj = p.adjust(pvalue),
+        dplyr::mutate(padj = p.adjust(pvalue),
                       qvalue = calcQvalue(pvalue),
                       rank = rank(pvalue)) %>%
         dplyr::arrange(pvalue) -> final_result

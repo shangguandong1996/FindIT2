@@ -14,7 +14,7 @@ utils::globalVariables(c("cor", "pvalue"))
 #'
 #' @param mmAnnoCor the annotated GRange object from peakGeneCor
 #' @param select_gene gene which you want to show
-#' @param sigShow one of 'pvalue' 'p_adj' 'qvalue'
+#' @param sigShow one of 'pvalue' 'padj' 'qvalue'
 #' @param addLine whether add cor line
 #' @param addFullInfo whether add full feature info on plot
 #'
