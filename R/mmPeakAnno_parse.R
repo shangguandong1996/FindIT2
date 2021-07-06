@@ -45,6 +45,11 @@ getAssocPairNumber <- function(mmAnno,
         colName <- "geneNumber"
     }
 
+    # In R 3.6 GenomicGRanges, if duplicted names in GRanges
+    # as.data.frame will report error(R 4.10 not)
+    # So I set mmAnno into NULL to avoid this error
+    names(mmAnno) <- NULL
+
     mmAnno %>%
         as.data.frame(stringsAsFactors = FALSE) %>%
         dplyr::group_by(!!sym(type)) %>%
