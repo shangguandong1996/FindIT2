@@ -49,14 +49,30 @@ getAssocPairNumber <- function(mmAnno,
     # as.data.frame will report error(R 4.10 not)
     # So I set mmAnno into NULL to avoid this error
     names(mmAnno) <- NULL
-
     mmAnno %>%
         as.data.frame(stringsAsFactors = FALSE) %>%
+        dplyr::select(feature_id, gene_id) -> mmAnno_df
+
+    if ("mmCor_mode" %in% names(metadata(mmAnno))){
+        if (metadata(mmAnno)$mmCor_mode == "enhancerPromoterCor") {
+            mm_promoter_tidy <- metadata(mmAnno)$mm_promoter_tidy %>%
+                dplyr::select(promoter_feature, gene_id) %>%
+                dplyr::rename(feature_id = promoter_feature)
+
+            mmAnno_df <- rbind(mmAnno_df,
+                               mm_promoter_tidy) %>%
+                dplyr::distinct()
+
+        }
+    }
+
+    mmAnno_df %>%
         dplyr::group_by(!!sym(type)) %>%
         dplyr::summarise(!!sym(colName) := dplyr::n()) %>%
         dplyr::mutate(!!sym(type) := stringr::str_sort(!!sym(type),
             numeric = TRUE
         )) -> pairNumber
+
 
     freqName <- gsub("_id", "_freq", type)
 
