@@ -63,12 +63,14 @@ test_that("findIT TFHit test", {
     quiet(findIT_TFHit(
         input_genes = input_genes,
         Txdb = Txdb,
-        TF_GR_database = ChIP_peak_GR
+        TF_GR_database = ChIP_peak_GR,
+        scan_dist = 2e4,
+        decay_dist = 1e3
     ) -> result_findIT_TFHit)
 
     expect_equal(
         log10(result_findIT_TFHit$pvalue[1]),
-        -120.30393,
+        -62.56263,
         tolerance = 0.0001)
 })
 

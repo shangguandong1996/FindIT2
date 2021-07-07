@@ -8,8 +8,8 @@ findIT_TFHit(
   input_genes,
   Txdb,
   TF_GR_database,
-  scan_dist = 1000,
-  decay_dist = 20000,
+  scan_dist = 20000,
+  decay_dist = 1000,
   Chrs_included,
   background_genes = NULL,
   background_number = 3000

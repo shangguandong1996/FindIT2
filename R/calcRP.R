@@ -261,6 +261,12 @@ calcRP_region <- function(mmAnno,
 
     mmAnno$centerToTSS <- GenomicRanges::distance(peak_scaned_center, gene_scaned_TSS)
 
+
+    # In R 3.6 GenomicGRanges, if duplicted names in GRanges
+    # as.data.frame will report error(R 4.10 not)
+    # So I set mmAnno into NULL to avoid this error, so that I can test on server
+    names(mmAnno) <- NULL
+
     scan_result <- as.data.frame(mmAnno)
     scan_result <- scan_result[, c(
         "seqnames", "feature_id",
