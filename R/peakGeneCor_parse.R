@@ -8,12 +8,11 @@ utils::globalVariables(c("cor", "pvalue"))
 #'
 #' @importFrom dplyr filter select as_tibble mutate inner_join
 #' @importFrom dplyr group_by summarise left_join
-#' @importFrom magrittr %>%
 #' @importFrom ggplot2 aes
 #' @importFrom stats median
 #'
 #' @param mmAnnoCor the annotated GRange object from peakGeneCor
-#' @param select_gene gene which you want to show
+#' @param select_gene a gene_id which you want to show
 #' @param sigShow one of 'pvalue' 'padj' 'qvalue'
 #' @param addLine whether add cor line
 #' @param addFullInfo whether add full feature info on plot
@@ -57,7 +56,9 @@ plot_peakGeneCor <- function(mmAnnoCor,
                              select_gene,
                              addLine = TRUE,
                              addFullInfo = TRUE,
-                             sigShow = "pvalue") {
+                             sigShow = c("pvalue", "padj", "qvalue")) {
+
+    sigShow <- match.arg(sigShow, c("pvalue", "padj", "qvalue"))
     peakScoreMt <- metadata(mmAnnoCor)$peakScoreMt
     geneScoreMt <- metadata(mmAnnoCor)$geneScoreMt
 
@@ -74,7 +75,7 @@ plot_peakGeneCor <- function(mmAnnoCor,
         filter(gene_id == select_gene)
     feature_N <- nrow(select_df)
 
-    peakScoreMt[select_df$feature_id, , drop = FALSE] %>%
+    peak_gene_score <- peakScoreMt[select_df$feature_id, , drop = FALSE] %>%
         as_tibble(rownames = "feature_id") %>%
         tidyr::pivot_longer(
             cols = -c("feature_id"),
@@ -86,20 +87,20 @@ plot_peakGeneCor <- function(mmAnnoCor,
                 levels = unique(colnames(peakScoreMt))
             ),
             geneScore = rep(geneExpr, feature_N)
-        ) -> peak_gene_score
+        )
 
     plot_data <- inner_join(
         peak_gene_score,
         select_df
     )
 
-    ggplot2::ggplot(data = plot_data, aes(
+    p <- ggplot2::ggplot(data = plot_data, aes(
         x = peakScore,
         y = geneScore,
     )) +
         ggplot2::geom_point(alpha = 0.8) +
         ggplot2::facet_wrap(~feature_id, scales = "free") +
-        ggplot2::theme_bw() -> p
+        ggplot2::theme_bw()
 
     if (metadata(mmAnnoCor)$mmCor_mode == "enhancerPromoterCor") {
         select_promoter <- unique(select_df$promoter_feature)
@@ -126,7 +127,7 @@ plot_peakGeneCor <- function(mmAnnoCor,
     }
 
     if (addFullInfo) {
-        plot_data %>%
+        pos_Info <- plot_data %>%
             group_by(feature_id) %>%
             summarise(
                 x = median(peakScore),
@@ -140,7 +141,7 @@ plot_peakGeneCor <- function(mmAnnoCor,
                     scientific = TRUE,
                     digits = 2
                 )
-            )) -> pos_Info
+            ))
 
         p <- p +
             ggrepel::geom_text_repel(aes(x = x, y = y, label = label),
@@ -157,7 +158,6 @@ plot_peakGeneCor <- function(mmAnnoCor,
 #' shinyParse_peakGeneCor
 #'
 #' @import shiny
-#' @importFrom  magrittr %>%
 #'
 #' @param mmAnnoCor the annotated GRange object from peakGeneCor
 #'

@@ -86,13 +86,13 @@ integrate_ChIP_RNA <- function(result_geneRP,
 
 
 
-    dplyr::left_join(result_geneRP,
+    merge_result <- dplyr::left_join(result_geneRP,
         result_geneDiff,
         by = "gene_id"
-    ) -> merge_result
+    )
     allGenes_N <- as.double(nrow(merge_result))
 
-    merge_result %>%
+    merge_result <- merge_result %>%
         dplyr::mutate(
             diff_rank = rank(padj, na.last = "keep"),
             diff_rank = dplyr::case_when(
@@ -112,7 +112,7 @@ integrate_ChIP_RNA <- function(result_geneRP,
             gene_category = factor(gene_category,
                 levels = c("up", "down", "static")
             )
-        ) -> merge_result
+        )
 
 
     # in case of no up or down genes
@@ -137,24 +137,24 @@ integrate_ChIP_RNA <- function(result_geneRP,
         return(merge_result)
     }
 
-    suppressWarnings(ks.test(upGenes_rank,
+    up_static_pvalue <- suppressWarnings(ks.test(upGenes_rank,
         staticGenes_rank,
         alternative = "greater"
-    )$p.value) -> up_static_pvalue
+    )$p.value)
 
-    suppressWarnings(ks.test(downGenes_rank,
+    down_static_pvalue <- suppressWarnings(ks.test(downGenes_rank,
         staticGenes_rank,
         alternative = "greater"
-    )$p.value) -> down_static_pvalue
+    )$p.value)
 
 
-    paste0(
+    ks_test <- paste0(
         "Kolmogorov-Smirnov Tests ",
         "\npvalue of up vs static: ",
         format(up_static_pvalue, digits = 3, scientific = TRUE),
         "\npvalue of down vs static: ",
         format(down_static_pvalue, digits = 3, scientific = TRUE)
-    ) -> ks_test
+    )
 
 
 
@@ -166,7 +166,7 @@ integrate_ChIP_RNA <- function(result_geneRP,
         vjustvar = 1
     )
 
-    merge_result %>%
+    p <- merge_result %>%
         ggplot2::ggplot(aes(x = RP_rank)) +
         ggplot2::stat_ecdf(aes(color = gene_category), geom = "line") +
         ggplot2::geom_text(data = annotate_df, aes(
@@ -177,7 +177,7 @@ integrate_ChIP_RNA <- function(result_geneRP,
             label = annotateText
         )) +
         ggplot2::xlab("RP_rank based on ChIP-Seq") +
-        ggplot2::scale_x_continuous(expand = c(0, 0)) -> p
+        ggplot2::scale_x_continuous(expand = c(0, 0))
 
     return(p)
 }
@@ -192,7 +192,7 @@ integrate_ChIP_RNA <- function(result_geneRP,
 #' integrate value from replicates
 #'
 #' @param mt value matrix
-#' @param colData a data.frame with a single column. Rows of colData
+#' @param colData a data.frame with a single column named with "type". Rows of colData
 #' correspond to columns of mt.
 #' @param fun the function you want to use. If set NULL, program will decide integrate
 #' method according to your 'type' parameter.
@@ -220,7 +220,7 @@ integrate_ChIP_RNA <- function(result_geneRP,
 integrate_replicates <- function(mt,
     colData,
     fun = NULL,
-    type = "value") {
+    type = c("value", "rank", "rank_zscore", "pvalue")) {
     if (!all(colnames(mt) == rownames(colData))) {
         stop("Please make sure order between colnames(mt) and rownames(colData) are consistent",
             call. = FALSE
@@ -232,6 +232,8 @@ integrate_replicates <- function(mt,
     }
 
     if (is.null(fun)) {
+        type <- match.arg(type, c("value", "rank", "rank_zscore", "pvalue"))
+
         fun <- switch(type,
             value = mean,
             rank = prod,
@@ -246,9 +248,9 @@ integrate_replicates <- function(mt,
     replicates <- colData$type
     sample <- unique(colData$type)
 
-    sapply(sample, function(x) {
+    result <- sapply(sample, function(x) {
         apply(mt[, x == replicates, drop = FALSE], 1, fun)
-    }) -> result
+    })
 
     if (length(result) == 1) {
         return(result)

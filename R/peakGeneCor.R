@@ -14,6 +14,7 @@ utils::globalVariables(c(
 #' @param geneScoreMt gene count matirx. The rownames are gene_id in mmAnno,
 #' while the colnames are sample names.
 #' @param parallel whehter you want to using bplapply to speed up calculation
+#' @param verbose whether you want to report detailed running message
 #'
 #' @return mmAnno with Cor, pvalue,padj,qvalue column
 #' @export
@@ -53,7 +54,8 @@ utils::globalVariables(c(
 peakGeneCor <- function(mmAnno,
                         peakScoreMt,
                         geneScoreMt,
-                        parallel = FALSE) {
+                        parallel = FALSE,
+                        verbose = TRUE) {
 
     # check colnames match
     if (all(colnames(peakScoreMt) == colnames(geneScoreMt))) {
@@ -87,10 +89,12 @@ peakGeneCor <- function(mmAnno,
     }
 
 
-    cat(
+    if (verbose){
+    message(
         ">> calculating cor and pvalue, which may be time consuming...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
 
     mt_gene <- geneScoreMt[mmAnno_left$gene_id, ]
     mt_peak <- peakScoreMt[mmAnno_left$feature_id, ]
@@ -100,32 +104,36 @@ peakGeneCor <- function(mmAnno,
         # though cor(t(mt_gene["gene",]), t(mt_peak["peak,]))
         # may quickyly produce the whole result
         # but it will produce a very very huge matrix
-        suppressWarnings(bplapply(seq_len(dim(mt_gene)[1]), function(index) {
+        cor_result <- suppressWarnings(bplapply(seq_len(dim(mt_gene)[1]),
+                                                function(index) {
             cor <- suppressWarnings(cor.test(
                 mt_gene[index, ],
                 mt_peak[index, ]
             ))
 
             return(c(cor$estimate, cor$p.value))
-        })) -> cor_result
+        }))
     } else {
-        suppressWarnings(lapply(seq_len(dim(mt_gene)[1]), function(index) {
+        cor_result <- suppressWarnings(lapply(seq_len(dim(mt_gene)[1]),
+                                              function(index) {
             cor <- suppressWarnings(cor.test(
                 mt_gene[index, ],
                 mt_peak[index, ]
             ))
 
             return(c(cor$estimate, cor$p.value))
-        })) -> cor_result
+        }))
     }
 
     cor_result <- unlist(cor_result)
     cor_mt <- matrix(cor_result, ncol = 2, byrow = TRUE)
 
-    cat(
+    if (verbose){
+    message(
         ">> merging all info together...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
 
     mmAnno_left$cor <- cor_mt[, 1]
     mmAnno_left$pvalue <- cor_mt[, 2]
@@ -137,10 +145,12 @@ peakGeneCor <- function(mmAnno,
     metadata(mmAnno)$geneScoreMt <- geneScoreMt
     metadata(mmAnno)$mmCor_mode <- "peakGeneCor"
 
-    cat(
+    if (verbose){
+    message(
         ">> done\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
     return(mmAnno)
 }
 
@@ -155,6 +165,7 @@ peakGeneCor <- function(mmAnno,
 #' @param down_scanEnhacner the scan distance which is used to scan feature
 #' @param peakScoreMt peak count matrix. The rownames are feature_id in peak_GR
 #' @param parallel whether you want to parallel to speed up
+#' @param verbose whether you want to report detailed running message
 #'
 #' @return mmAnno with Cor, pvalue,padj,qvalue column
 #' @export
@@ -182,24 +193,29 @@ enhancerPromoterCor <- function(peak_GR,
                                 up_scanEnhancer = 2e4,
                                 down_scanEnhacner = 2e4,
                                 peakScoreMt,
-                                parallel = FALSE) {
+                                parallel = FALSE,
+                                verbose = TRUE) {
 
     peak_GR <- check_peakGR(peak_GR = peak_GR, Txdb = Txdb)
     check_duplicated(peak_GR)
 
-    cat(
+    if (verbose) {
+    message(
         ">> using scanPromoter parameter to scan promoter for each gene...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
-    quiet(mm_geneScan(
+    }
+
+    mm_promoter <- mm_geneScan(
         peak_GR = peak_GR,
         Txdb = Txdb,
         upstream = up_scanPromoter,
-        downstream = down_scanPromoter
-    )) -> mm_promoter
+        downstream = down_scanPromoter,
+        verbose = FALSE
+    )
 
     # find the nearest peak for gene
-    mm_promoter %>%
+    mm_promoter_pair <- mm_promoter %>%
         data.frame() %>%
         dplyr::select(feature_id, gene_id, distanceToTSS) %>%
         dplyr::mutate(distanceToTSS_abs = abs(distanceToTSS)) %>%
@@ -208,7 +224,7 @@ enhancerPromoterCor <- function(peak_GR,
             promoter_feature = feature_id[which.min(distanceToTSS_abs)],
             peak_gene_pair = paste0(feature_id, ":", gene_id)
         ) %>%
-        dplyr::ungroup() -> mm_promoter_pair
+        dplyr::ungroup()
 
     # only maintain two column
     pair_info <- mm_promoter_pair %>%
@@ -218,70 +234,79 @@ enhancerPromoterCor <- function(peak_GR,
             peak_gene_pair = paste0(promoter_feature, ":", gene_id)
         )
 
-    cat(paste0(">> there are ", nrow(pair_info), " gene have scaned promoter\n"))
+    message(paste0(">> there are ", nrow(pair_info), " gene have scaned promoter"))
 
     # to fish the distanceToTSS
-    mm_promoter_pair %>%
+    mm_promoter_tidy <- mm_promoter_pair %>%
         dplyr::filter(peak_gene_pair %in% pair_info$peak_gene_pair) %>%
-        dplyr::select(gene_id, distanceToTSS, promoter_feature) -> mm_promoter_tidy
+        dplyr::select(gene_id, distanceToTSS, promoter_feature)
 
 
-    cat(
+    if (verbose){
+    message(
         ">> using scanEnhancer parameter to scan Enhancer for each gene...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
-    quiet(mm_geneScan(peak_GR = peak_GR,
+    }
+
+    mm_scan <- mm_geneScan(peak_GR = peak_GR,
                       Txdb = Txdb,
                       upstream = up_scanEnhancer,
-                      downstream = down_scanEnhacner)
-          ) -> mm_scan
+                      downstream = down_scanEnhacner,
+                      verbose = FALSE)
 
     # some gene may not have promoter(no open peak) in here
     mm_scan <- subset(mm_scan, gene_id %in% mm_promoter_tidy$gene_id)
 
     # suppress left_join
-    suppressMessages(
+    enhancer_peak_pair <- suppressMessages(
         mcols(mm_scan) %>%
             data.frame() %>%
             dplyr::left_join(mm_promoter_tidy[, c(1, 3)])
-        ) -> enhancer_peak_pair
+        )
 
 
     mt_promoter <- peakScoreMt[enhancer_peak_pair$promoter_feature, ]
     mt_enhancer <- peakScoreMt[enhancer_peak_pair$feature_id, ]
 
-
-    cat(
+    if (verbose) {
+    message(
         ">> calculating cor and pvalue, which may be time consuming...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
     if (parallel) {
         # though cor(t(mt_gene["gene",]), t(mt_peak["peak,]))
         # may quickyly produce the whole result
         # but it will produce a very very huge matrix
-        suppressWarnings(bplapply(seq_len(dim(mt_promoter)[1]), function(index) {
+        cor_result <- suppressWarnings(bplapply(seq_len(dim(mt_promoter)[1]),
+                                                function(index) {
             cor <- suppressWarnings(cor.test(
                 mt_promoter[index, ],
                 mt_enhancer[index, ]
             ))
 
             return(c(cor$estimate, cor$p.value))
-        })) -> cor_result
+        }))
     } else {
-        suppressWarnings(lapply(seq_len(dim(mt_promoter)[1]), function(index) {
+        cor_result <- suppressWarnings(lapply(seq_len(dim(mt_promoter)[1]),
+                                              function(index) {
             cor <- suppressWarnings(cor.test(
                 mt_promoter[index, ],
                 mt_enhancer[index, ]
             ))
 
             return(c(cor$estimate, cor$p.value))
-        })) -> cor_result
+        }))
     }
 
-    cat(
+    if (verbose) {
+    message(
         ">> merging all info together...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
+
     cor_result <- unlist(cor_result)
     cor_mt <- matrix(cor_result, ncol = 2, byrow = TRUE)
 
@@ -304,9 +329,11 @@ enhancerPromoterCor <- function(peak_GR,
 
     metadata(mm_scan)$mmCor_mode <- "enhancerPromoterCor"
 
-    cat(
+    if (verbose) {
+    message(
         ">> done\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
     return(mm_scan)
 }

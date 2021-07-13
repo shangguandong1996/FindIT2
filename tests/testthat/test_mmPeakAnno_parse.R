@@ -4,8 +4,8 @@ seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
 
 peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
 peak_GR <- loadPeakFile(peak_path)[1:100]
-quiet(peakAnno <- mm_nearestGene(peak_GR, Txdb))
-quiet(peakAnno_scan <- mm_geneScan(peak_GR, Txdb))
+peakAnno <- mm_nearestGene(peak_GR, Txdb, verbose = FALSE)
+peakAnno_scan <- mm_geneScan(peak_GR, Txdb, verbose = FALSE)
 
 test_that("getAssocPairNumber test", {
     expect_equal(getAssocPairNumber(peakAnno)$peakNumber[1], 1)

@@ -1,13 +1,13 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# FindIT2
+# FindIT2:Find influential TF and influential Target
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-This package implements functions to find influential TF and target
-based on different input type.It have five module
+FindIT2 is a package that implements functions to find influential TF
+and target based on different input type.It has five module
 
 -   Multi-peak multi-gene annotaion(mmPeakAnno module)
 -   Calculate regulation potential(calcRP module)
@@ -17,7 +17,7 @@ based on different input type.It have five module
     module)
 -   Calculate peak-gene or peak-peak correlation(peakGeneCor module)
 
-And there are also some other useful function like integrate different
+And there are also some other useful functions like integrate different
 source information, calculate jaccard similarity for your TF. I will
 introduce all these function in vignettes.
 

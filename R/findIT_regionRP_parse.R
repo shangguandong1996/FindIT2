@@ -15,8 +15,8 @@ utils::globalVariables(c(".", "percent", "merge_result"))
 #' @export
 #'
 shinyParse_findIT_regionRP <- function(merge_result,
-                                       mode = "gene") {
-    mode <- match.arg(mode, c("TF", "gene"))
+                                       mode = c("gene", "TF")) {
+    mode <- match.arg(mode, c("gene", "TF"))
 
     sumRP_data <- SummarizedExperiment::assays(merge_result)$sumRP
     fullRP_data <- SummarizedExperiment::assays(merge_result)$fullRP

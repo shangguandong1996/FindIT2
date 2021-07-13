@@ -9,12 +9,12 @@ peak_GR <- loadPeakFile(peak_path)
 
 
 test_that("integrate ChIP RNA test", {
-    quiet(mmAnno <- mm_geneScan(peak_GR, Txdb))
+    mmAnno <- mm_geneScan(peak_GR, Txdb)
 
-    quiet(calcRP_TFHit(
+    calcRP_TFHit(
         mmAnno = mmAnno,
         Txdb = Txdb
-    ) -> result_geneRP)
+    ) -> result_geneRP
 
     integrate_ChIP_RNA(
         result_geneRP = result_geneRP,

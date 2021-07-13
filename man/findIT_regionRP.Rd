@@ -10,7 +10,8 @@ findIT_regionRP(
   TF_GR_database,
   input_genes,
   background_genes = NULL,
-  background_number = 3000
+  background_number = 3000,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -20,12 +21,16 @@ findIT_regionRP(
 
 \item{TF_GR_database}{TF peak GRange with a column named TF_id representing you TF name}
 
-\item{input_genes}{genes which you want to find influentail TF for}
+\item{input_genes}{a character vector which represent genes set
+which you want to find influential TF for}
 
-\item{background_genes}{If you do not assign background gene , program will sample
+\item{background_genes}{a character vector which represent background genes set.
+If you do not assign background gene , program will sample
 background_number genes as background genes from all gene sets.}
 
 \item{background_number}{background genes number}
+
+\item{verbose}{whether you want to report detailed running message}
 }
 \value{
 a MultiAssayExperiment object containg detailed TF-percent and TF-pvalue
@@ -37,7 +42,7 @@ motif data
 \examples{
 if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
     data("ATAC_normCount")
-    data("input_genes")
+    data("test_geneSet")
     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
 
@@ -62,7 +67,7 @@ if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
         regionRP = regionRP,
         Txdb = Txdb,
         TF_GR_database = ChIP_peak_GR,
-        input_genes = input_genes,
+        input_genes = test_geneSet,
         background_number = 3000
     ) -> result_findIT_regionRP
 

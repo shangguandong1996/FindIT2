@@ -14,12 +14,12 @@ check_seqlevel <- function(peak_GR, Txdb, print_ChrN = 10) {
         Txdb_level <- paste(seqlevels(Txdb), collapse = " ")
     }
 
-    cat(
+    message(
         ">> checking seqlevels match...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
-    cat(">> your peak_GR seqlevel:", peakGR_level, "...\n")
-    cat(">> your Txdb seqlevel:", Txdb_level, "...\n")
+    message(">> your peak_GR seqlevel:", peakGR_level, "...")
+    message(">> your Txdb seqlevel:", Txdb_level, "...")
 
     if (all(!seqlevels(peak_GR) %in% seqlevels(Txdb))) {
         stop(
@@ -29,7 +29,7 @@ check_seqlevel <- function(peak_GR, Txdb, print_ChrN = 10) {
     } else if (any(!seqlevels(peak_GR) %in% seqlevels(Txdb))) {
         msg <- paste0(
             "some peak's Chr is nor in your Txdb, for example: ",
-            seqlevels(peak_GR)[!seqlevels(peak_GR) %in% seqlevels(Txdb)], "\n",
+            seqlevels(peak_GR)[!seqlevels(peak_GR) %in% seqlevels(Txdb)],
             "  I have filtered peaks in these Chr, though seqlevels still retain."
         )
         warning(msg,call. = FALSE)
@@ -109,9 +109,8 @@ check_duplicated <- function(peak_GR){
 
 
 utils::globalVariables(c("tmp_start", "tmp_end", "gene_id"))
-#' @importFrom magrittr %>%
 report_geneInfo <- function(gene_GR) {
-    data.frame(gene_GR, stringsAsFactors = FALSE) %>%
+    geneInfo <- data.frame(gene_GR, stringsAsFactors = FALSE) %>%
         dplyr::mutate(
             tmp_start = dplyr::case_when(
                 strand == "-" ~ end,
@@ -126,7 +125,7 @@ report_geneInfo <- function(gene_GR) {
         dplyr::rename(
             start = tmp_start,
             end = tmp_end
-        ) -> geneInfo
+        )
 
     return(geneInfo)
 }
@@ -143,11 +142,11 @@ report_geneInfo <- function(gene_GR) {
 # }
 
 # https://stackoverflow.com/questions/34208564/how-to-hide-or-disable-in-function-printed-message
-quiet <- function(x) {
-    sink(tempfile())
-    on.exit(sink())
-    invisible(force(x))
-}
+# quiet <- function(x) {
+#     sink(tempfile())
+#     on.exit(sink())
+#     invisible(force(x))
+# }
 
 #' @importFrom methods is
 calcQvalue <- function(pvalue){

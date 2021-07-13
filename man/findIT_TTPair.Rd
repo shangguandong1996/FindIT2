@@ -13,11 +13,14 @@ findIT_TTPair(
 )
 }
 \arguments{
-\item{input_genes}{genes which you want to find influentail TF for}
+\item{input_genes}{a character vector which represent genes set
+which you want to find influential TF for}
 
-\item{TF_target_database}{TF_target pair data}
+\item{TF_target_database}{TF_target pair data with two column named TF_id and
+target_gene}
 
-\item{gene_background}{If you do not assign background gene, program will consider
+\item{gene_background}{a character vector represent your bakcaground gene.
+If you do not assign background gene, program will consider
 all target gene as background}
 
 \item{TFHit_min}{minimal size of target gene regulated by TF}
@@ -32,10 +35,10 @@ find influential TF of your input gene set based on public TF-Target data
 }
 \examples{
 data("TF_target_database")
-data("input_genes")
+data("test_geneSet")
 
 findIT_TTPair(
-    input_genes = input_genes,
+    input_genes = test_geneSet,
     TF_target_database = TF_target_database
 ) -> result_findIT_TTPair
 }

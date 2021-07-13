@@ -12,7 +12,8 @@ enhancerPromoterCor(
   up_scanEnhancer = 20000,
   down_scanEnhacner = 20000,
   peakScoreMt,
-  parallel = FALSE
+  parallel = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ enhancerPromoterCor(
 \item{peakScoreMt}{peak count matrix. The rownames are feature_id in peak_GR}
 
 \item{parallel}{whether you want to parallel to speed up}
+
+\item{verbose}{whether you want to report detailed running message}
 }
 \value{
 mmAnno with Cor, pvalue,padj,qvalue column

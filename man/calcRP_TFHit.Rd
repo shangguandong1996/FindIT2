@@ -4,7 +4,13 @@
 \alias{calcRP_TFHit}
 \title{calcRP_TFHit}
 \usage{
-calcRP_TFHit(mmAnno, Txdb, decay_dist = 1000, report_fullInfo = FALSE)
+calcRP_TFHit(
+  mmAnno,
+  Txdb,
+  decay_dist = 1000,
+  report_fullInfo = FALSE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{mmAnno}{the annotated GRange object from mm_geneScan}
@@ -14,6 +20,8 @@ calcRP_TFHit(mmAnno, Txdb, decay_dist = 1000, report_fullInfo = FALSE)
 \item{decay_dist}{decay distance}
 
 \item{report_fullInfo}{whether you want to report full peak-RP-gene info}
+
+\item{verbose}{whether you want to report detailed running message}
 }
 \value{
 if report_fullInfo is TRUE, it will output GRanges with detailed info.

@@ -7,8 +7,7 @@ peak_GR <- loadPeakFile(peak_path)[1:100]
 
 test_that("mmAnno nearest mode test", {
     seqlevels(peak_GR) <- "5"
-    expect_error(
-        quiet(mm_nearestGene(peak_GR = peak_GR,Txdb = Txdb)),
+    expect_error(mm_nearestGene(peak_GR = peak_GR,Txdb = Txdb,verbose = FALSE),
         "have no sequence levels in common"
     )
 
@@ -20,13 +19,13 @@ test_that("mmAnno nearest mode test", {
 
 
     expect_warning(
-        quiet(mm_nearestGene(peak_GR = peak_GR_add,Txdb = Txdb)),
+        mm_nearestGene(peak_GR = peak_GR_add,Txdb = Txdb, verbose = FALSE),
         "some peak's Chr is nor in your Txdb, for example: Chr6"
     )
 
-    mmAnno <- suppressMessages(quiet(
-        mm_nearestGene(peak_GR = peak_GR,Txdb = Txdb)
-        ))
+    mmAnno <- suppressMessages(
+        mm_nearestGene(peak_GR = peak_GR,Txdb = Txdb, verbose = FALSE)
+        )
 
     expect_equal(mmAnno$distanceToTSS[1], -344)
     expect_equal(mmAnno$gene_id[5], "AT5G01040")
@@ -36,9 +35,9 @@ test_that("mmAnno nearest mode test", {
 
 test_that("mmAnno geneScan mode test", {
 
-    mmAnno <- suppressMessages(quiet(
-        mm_geneScan(peak_GR = peak_GR, Txdb = Txdb)
-    ))
+    mmAnno <- suppressMessages(
+        mm_geneScan(peak_GR = peak_GR, Txdb = Txdb, verbose = FALSE)
+        )
 
     expect_equal(mmAnno$distanceToTSS[1], -1174)
     expect_equal(mmAnno$gene_id[1], "AT5G01010")
@@ -48,24 +47,26 @@ test_that("mmAnno geneScan mode test", {
 
 test_that("mmAnno gene Bound mode test", {
     expect_message(
-        quiet(mm_geneBound(peak_GR, Txdb, c("AT5G01015"))),
+        mm_geneBound(peak_GR, Txdb, c("AT5G01015"), verbose = FALSE),
         "all your input gene have been annotated by nearestGene mode")
 
     expect_error(
-        quiet(mm_geneBound(peak_GR, Txdb, c("AT2G17950"))),
+        mm_geneBound(peak_GR, Txdb, c("AT2G17950"), verbose = FALSE),
         "sorry, all of your input genes all not in your peak_GR chrosome")
 
     expect_message(
-        quiet(mm_geneBound(peak_GR, Txdb, c("AT5G01015", "AT5G67570"))),
+        mm_geneBound(peak_GR, Txdb, c("AT5G01015", "AT5G67570"), verbose = FALSE),
         "It seems that there 1 genes")
 
     expect_warning(
-        quiet(mm_geneBound(peak_GR, Txdb, c("AT5G01015", "AT5G67570", "AT2G17950"))),
+        mm_geneBound(peak_GR, Txdb, c("AT5G01015", "AT5G67570", "AT2G17950"),
+                           verbose = FALSE),
         "some of your input gene are not in your peak_GR chrosome")
 
     mmAnno <- mm_geneBound(peak_GR = peak_GR,
                            Txdb = Txdb,
-                           input_genes = c("AT5G01015", "AT5G67570"))
+                           input_genes = c("AT5G01015", "AT5G67570"),
+                           verbose = FALSE)
 
     expect_equal(mmAnno$distanceToTSS_abs[2], 26516130)
 

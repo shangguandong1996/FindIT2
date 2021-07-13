@@ -10,6 +10,7 @@ mm_geneScan(
   upstream = 3000,
   downstream = 3000,
   reportGeneInfo = FALSE,
+  verbose = TRUE,
   ...
 )
 }
@@ -23,6 +24,8 @@ mm_geneScan(
 \item{downstream}{distance to start site(downstream)}
 
 \item{reportGeneInfo}{whether you want to add gene info}
+
+\item{verbose}{whether you want to report detailed running message}
 
 \item{...}{additional arguments in findOverlaps}
 }

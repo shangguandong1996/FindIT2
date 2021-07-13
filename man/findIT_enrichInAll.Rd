@@ -7,9 +7,11 @@
 findIT_enrichInAll(input_feature_id, peak_GR, TF_GR_database)
 }
 \arguments{
-\item{input_feature_id}{peaks which you want to find influentail TF for}
+\item{input_feature_id}{a character vector which represent peaks set
+which you want to find influential TF for}
 
-\item{peak_GR}{all peak sets.Your input_feature_id is a part of it.}
+\item{peak_GR}{a GRange object represent your whole feature location with a
+column named feature_id, which your input_feature_id should a part of it.}
 
 \item{TF_GR_database}{TF peak GRange with a column named TF_id representing you TF name}
 }
@@ -21,7 +23,7 @@ find influential TF of your input peak set compared with your whole peak sets
 based on TF ChIP-Seq or motif data.
 }
 \examples{
-data("input_feature_id")
+data("test_featureSet")
 peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
 peak_GR <- loadPeakFile(peak_path)
 ChIP_peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
@@ -29,7 +31,7 @@ ChIP_peak_GR <- loadPeakFile(ChIP_peak_path)
 ChIP_peak_GR$TF_id <- "AT1G28300"
 
 findIT_enrichInAll(
-    input_feature_id = input_feature_id,
+    input_feature_id = test_featureSet,
     peak_GR = peak_GR,
     TF_GR_database = ChIP_peak_GR
 ) -> result_findIT_enrichInAll

@@ -9,13 +9,13 @@ plot_peakGeneCor(
   select_gene,
   addLine = TRUE,
   addFullInfo = TRUE,
-  sigShow = "pvalue"
+  sigShow = c("pvalue", "padj", "qvalue")
 )
 }
 \arguments{
 \item{mmAnnoCor}{the annotated GRange object from peakGeneCor}
 
-\item{select_gene}{gene which you want to show}
+\item{select_gene}{a gene_id which you want to show}
 
 \item{addLine}{whether add cor line}
 

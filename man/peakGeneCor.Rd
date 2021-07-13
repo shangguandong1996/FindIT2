@@ -4,7 +4,7 @@
 \alias{peakGeneCor}
 \title{peakGeneCor}
 \usage{
-peakGeneCor(mmAnno, peakScoreMt, geneScoreMt, parallel = FALSE)
+peakGeneCor(mmAnno, peakScoreMt, geneScoreMt, parallel = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{mmAnno}{the annotated GRange object from mm_geneScan or mm_nearestGene}
@@ -16,6 +16,8 @@ while the colnames are sample names.}
 while the colnames are sample names.}
 
 \item{parallel}{whehter you want to using bplapply to speed up calculation}
+
+\item{verbose}{whether you want to report detailed running message}
 }
 \value{
 mmAnno with Cor, pvalue,padj,qvalue column

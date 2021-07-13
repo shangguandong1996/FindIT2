@@ -10,10 +10,13 @@ utils::globalVariables(c("bw", "centerToTSS", "RP", "sumRP", "logRP", "normRP"))
 #'
 #' @param bwFile bw file
 #' @param Txdb Txdb
-#' @param gene_included genes which you want to calcluate RP for
-#' @param Chrs_included chromosome where you want to calcluate gene RP in
+#' @param gene_included a character vector which represent gene set
+#' which you want to calculate RP for
+#' @param Chrs_included a character vector which represent chromosomes
+#' where you want to calculate gene RP in
 #' @param decay_dist decay distance
 #' @param scan_dist scan distance
+#' @param verbose whether you want to report detailed running message
 #'
 #' @return data.frame
 #' @details
@@ -40,11 +43,16 @@ calcRP_coverage <- function(bwFile,
                             gene_included,
                             Chrs_included,
                             decay_dist = 1e3,
-                            scan_dist = 2e4) {
-    cat(
+                            scan_dist = 2e4,
+                            verbose = TRUE) {
+
+    if (verbose){
+    message(
         ">> preparing gene features information...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
+
     if (missing(gene_included)) {
         genes_GR <- genes(Txdb)
     } else {
@@ -71,25 +79,34 @@ calcRP_coverage <- function(bwFile,
         fix = "start"
     )
 
-    cat(
+    if (verbose){
+    message(
         ">> some scan range may cross Chr bound, trimming...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
+
     scan_region <- trim(scan_region)
 
-    cat(
+    if (verbose){
+    message(
         ">> preparing weight info...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
+
     # https://github.com/qinqian/lisa/blob/9fef7cb682264bdef5cca6847d09acf6c92a08f2/lisa/utils.py#L79-L98
     alpha <- -log(1 / 3) * (scan_dist / decay_dist)
     d <- -scan_dist:scan_dist
     weight <- (2 * exp(-alpha * abs(d) / scan_dist)) / (1 + exp(-alpha * abs(d) / scan_dist))
 
-    cat(
+    if (verbose){
+    message(
         ">> loading", basename(bwFile), "info...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
+
     bwInfo <- rtracklayer::import(bwFile,
         format = "Bigwig",
         as = "RleList"
@@ -98,11 +115,13 @@ calcRP_coverage <- function(bwFile,
     signal_list <- list()
 
     for (Chr in Chrs_included) {
-        cat("------------\n")
-        cat(
+        if (verbose){
+        message("------------")
+        message(
             ">> extracting and calcluating", Chr, "signal...\t\t",
-            format(Sys.time(), "%Y-%m-%d %X"), "\n"
+            format(Sys.time(), "%Y-%m-%d %X")
         )
+        }
 
         scan_region_included <- scan_region[seqnames(scan_region) == Chr &
             width(scan_region) == (2 * scan_dist + 1)]
@@ -122,9 +141,9 @@ calcRP_coverage <- function(bwFile,
             width(scan_region) < (2 * scan_dist + 1)]
 
         if (length(scan_region_left) > 0) {
-            cat(
+            message(
                 ">> dealing with", Chr, "left gene signal...\t\t",
-                format(Sys.time(), "%Y-%m-%d %X"), "\n"
+                format(Sys.time(), "%Y-%m-%d %X")
             )
             gene_left <- names(scan_region_left)
 
@@ -154,30 +173,39 @@ calcRP_coverage <- function(bwFile,
 
         # normalized per Chr
         # different Chrs has own RP profile
-        cat(
+        if (verbose){
+        message(
             ">> norming", Chr, "RP accoring to the whole Chr RP...\t\t",
-            format(Sys.time(), "%Y-%m-%d %X"), "\n"
+            format(Sys.time(), "%Y-%m-%d %X")
         )
+        }
+
         signal_norm <- log(signal_merge + 1) - mean(log(signal_merge + 1))
 
-        data.frame(
+        signal_list[[Chr]] <- data.frame(
             gene_id = names(signal_norm),
             sumRP = signal_norm,
             stringsAsFactors = FALSE
-        ) -> signal_list[[Chr]]
+        )
     }
 
-    cat(
+    if (verbose){
+    message(
         ">> merging all Chr RP together...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
+
     final_RP <- do.call(rbind, signal_list)
     rownames(final_RP) <- NULL
 
-    cat(
+    if (verbose){
+    message(
         ">> done\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
+
     return(final_RP)
 }
 
@@ -187,17 +215,18 @@ calcRP_coverage <- function(bwFile,
 #' calculate regulatory potential based on mm_geneScan result and peakCount matrix,
 #' which is useful for ATAC or H3K27ac histone modification data.
 #'
-#' @importFrom magrittr %>%
 #' @import rlang
 #'
 #' @param mmAnno the annotated GRange object from mm_geneScan
 #' @param peakScoreMt peak count matrix. The rownames are feature_id in mmAnno,
 #' while the colnames are sample names
 #' @param Txdb Txdb
-#' @param Chrs_included chromosome where you want to calculate gene RP in.
+#' @param Chrs_included a character vector which represent
+#' chromosome where you want to calculate gene RP in.
 #' If Chromosome is not be set, it will calculate gene RP in all chromosomes in Txdb.
 #' @param decay_dist decay distance
 #' @param log_transform whether you want to log and norm your RP
+#' @param verbose whether you want to report detailed running message
 #'
 #' @return a MultiAssayExperiment object containg detailed peak-RP-gene relationship
 #' and sumRP info
@@ -231,14 +260,18 @@ calcRP_region <- function(mmAnno,
                           Txdb,
                           Chrs_included,
                           decay_dist = 1e3,
-                          log_transform = FALSE) {
+                          log_transform = FALSE,
+                          verbose = TRUE) {
 
     check_parameter_length(mmAnno, decay_dist)
 
-    cat(
-        "\n>> calculating peakCenter to TSS using peak-gene pair...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+    if (verbose) {
+    message(
+        ">> calculating peakCenter to TSS using peak-gene pair...\t\t",
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
+
     # names(peak_GR) <- peak_GR$feature_id
     # peak_scaned <- peak_GR[scan_result$feature_id]
     peak_scaned_center <- GenomicRanges::resize(mmAnno,
@@ -276,10 +309,14 @@ calcRP_region <- function(mmAnno,
 
     geneAll <- all_gene_location$gene_id
     noRPGene <- geneAll[!geneAll %in% unique(mmAnno$gene_id)]
-    cat(
+
+    if (verbose) {
+    message(
         ">> pre-filling", length(noRPGene), "noAssoc peak gene's RP with 0...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
+
     noRPGene_df <- data.frame(
         seqnames = as.character(GenomeInfoDb::seqnames(all_gene_location[noRPGene])),
         gene_id = noRPGene,
@@ -296,10 +333,12 @@ calcRP_region <- function(mmAnno,
     )
     colnames(fullRP_mt) <- colnames(peakScoreMt)
 
-    cat(
+    if (verbose) {
+    message(
         ">> calculating RP using centerToTSS and peak score",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
 
 
     for (i in seq_len(dim(peakScoreMt)[2])) {
@@ -316,18 +355,18 @@ calcRP_region <- function(mmAnno,
         # This fill can be useful when comapred with geneExpr data
         # some interesting gene may no RP
 
-        suppressMessages(dplyr::left_join(scan_result, sample_peakScore)) %>%
-            dplyr::mutate(RP = score * 2^(-centerToTSS / decay_dist)) -> peakRP_gene
+        peakRP_gene <- suppressMessages(dplyr::left_join(scan_result, sample_peakScore)) %>%
+            dplyr::mutate(RP = score * 2^(-centerToTSS / decay_dist))
         # mutate(RP = !!sym(sample_name) * 2^(-centerToTSS/decay_dist)) -> peakRP_gene
 
         fullRP_mt[, sample_name] <- peakRP_gene$RP
 
-        peakRP_gene %>%
+        calc_result <- peakRP_gene %>%
             dplyr::group_by(gene_id) %>%
             dplyr::mutate(sumRP = sum(RP)) %>%
             dplyr::select(c("seqnames", "gene_id", "sumRP")) %>%
             dplyr::distinct(gene_id, .keep_all = TRUE) %>%
-            dplyr::bind_rows(noRPGene_df) -> calc_result
+            dplyr::bind_rows(noRPGene_df)
 
         if (log_transform) {
             # this log and per chrom norm idea is from
@@ -336,7 +375,7 @@ calcRP_region <- function(mmAnno,
 
             # log norm can help you find high RP gene in several samples or
 
-            calc_result %>%
+            RP_list[[i]] <- calc_result %>%
                 dplyr::mutate(logRP = log(sumRP + 1)) %>%
                 # which makes normRP has meaning
                 dplyr::ungroup() %>%
@@ -346,7 +385,7 @@ calcRP_region <- function(mmAnno,
                 dplyr::ungroup() %>%
                 # a gene has negative RP means this gene RP is smaller than mean
                 dplyr::select(gene_id, normRP) %>%
-                dplyr::rename(!!sym(sample_name) := normRP) -> RP_list[[i]]
+                dplyr::rename(!!sym(sample_name) := normRP)
         } else {
             # no log norm may be suitable for finding tissue-specific RP gene
             # when ploting heatmap
@@ -358,17 +397,20 @@ calcRP_region <- function(mmAnno,
 
             # no log norm RP is suitable for latter analysis, like findIT
 
-            calc_result %>%
+            RP_list[[i]] <- calc_result %>%
                 dplyr::ungroup() %>%
                 dplyr::select(gene_id, sumRP) %>%
-                dplyr::rename(!!sym(sample_name) := sumRP) -> RP_list[[i]]
+                dplyr::rename(!!sym(sample_name) := sumRP)
         }
     }
 
-    cat(
+    if (verbose) {
+    message(
         ">> merging all info together\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
+
     sum_RP <- suppressMessages(purrr::reduce(RP_list, inner_join))
     rownames_gene <- sum_RP$gene_id
     sum_RP <- as.matrix(sum_RP[, -1])
@@ -392,10 +434,13 @@ calcRP_region <- function(mmAnno,
     S4Vectors::metadata(final_result)$decay_dist <- decay_dist
     S4Vectors::metadata(final_result)$log_transform <- log_transform
 
-    cat(
+    if (verbose) {
+    message(
         ">> done\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
+
     return(final_result)
 }
 
@@ -404,12 +449,11 @@ calcRP_region <- function(mmAnno,
 #' calculate regulatory potential based on ChIP-Seq peak data, which is useful
 #' for TF ChIP-seq data.
 #'
-#' @importFrom magrittr %>%
-#'
 #' @param mmAnno the annotated GRange object from mm_geneScan
 #' @param Txdb Txdb
 #' @param decay_dist decay distance
 #' @param report_fullInfo whether you want to report full peak-RP-gene info
+#' @param verbose whether you want to report detailed running message
 #'
 #' @return if report_fullInfo is TRUE, it will output GRanges with detailed info.
 #' While FALSE, it will output data frame
@@ -441,13 +485,16 @@ calcRP_region <- function(mmAnno,
 calcRP_TFHit <- function(mmAnno,
                          Txdb,
                          decay_dist = 1000,
-                         report_fullInfo = FALSE) {
+                         report_fullInfo = FALSE,
+                         verbose = TRUE) {
     check_parameter_length(mmAnno, decay_dist)
 
-    cat(
-        "\n>> calculating peakCenter to TSS using peak-gene pair...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+    if (verbose){
+    message(
+        ">> calculating peakCenter to TSS using peak-gene pair...\t\t",
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
 
     peak_scaned_center <- GenomicRanges::resize(mmAnno,
         width = 1,
@@ -468,24 +515,34 @@ calcRP_TFHit <- function(mmAnno,
 
 
     if ("feature_score" %in% colnames(mcols(mmAnno))) {
-        cat(
+        if (verbose){
+        message(
             ">> calculating RP using centerToTSS and feature_score\t\t",
-            format(Sys.time(), "%Y-%m-%d %X"), "\n"
+            format(Sys.time(), "%Y-%m-%d %X")
         )
+        }
+
         mmAnno$RP <- mmAnno$feature_score * 2^(-mmAnno$centerToTSS / decay_dist)
     } else {
-        cat(
+
+        if (verbose){
+        message(
             ">> calculating RP using centerToTSS and TF hit\t\t",
-            format(Sys.time(), "%Y-%m-%d %X"), "\n"
+            format(Sys.time(), "%Y-%m-%d %X")
         )
+        }
+
         mmAnno$RP <- 2^(-mmAnno$centerToTSS / decay_dist)
     }
 
-    cat(
+    if (verbose){
+    message(
         ">> merging all info together\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
-    mcols(mmAnno) %>%
+    }
+
+    peakRP_gene <- mcols(mmAnno) %>%
         data.frame(stringsAsFactors = FALSE) %>%
         dplyr::group_by(gene_id) %>%
         dplyr::summarise(
@@ -493,12 +550,14 @@ calcRP_TFHit <- function(mmAnno,
             sumRP = sum(RP)
         ) %>%
         dplyr::arrange(-sumRP) %>%
-        dplyr::mutate(RP_rank = rank(-sumRP)) -> peakRP_gene
+        dplyr::mutate(RP_rank = rank(-sumRP))
 
-    cat(
+    if (verbose){
+    message(
         ">> done\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
 
     if (report_fullInfo) {
         metadata(mmAnno)$peakRP_gene <- peakRP_gene

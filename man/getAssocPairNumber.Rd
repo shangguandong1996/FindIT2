@@ -4,12 +4,16 @@
 \alias{getAssocPairNumber}
 \title{getAssocPairNumber}
 \usage{
-getAssocPairNumber(mmAnno, output_type = "gene_id", output_summary = FALSE)
+getAssocPairNumber(
+  mmAnno,
+  output_type = c("gene_id", "feature_id"),
+  output_summary = FALSE
+)
 }
 \arguments{
 \item{mmAnno}{the annotated GRange object from mm_geneScan or mm_nearestGene}
 
-\item{output_type}{one of 'feature_id' or 'gene_id'}
+\item{output_type}{one of 'gene_id' or 'feature_id'}
 
 \item{output_summary}{whether you want to detailed info}
 }

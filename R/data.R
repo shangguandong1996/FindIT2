@@ -61,11 +61,11 @@
 "TF_target_database"
 
 
-#' input_genes
+#' test_geneSet
 #'
-#' @usage data(input_genes)
+#' @usage data(test_geneSet)
 #'
-#' @format gene vector
+#' @format character vector represent your interesting gene set
 #'
 #' @examples
 #' \dontrun{
@@ -99,30 +99,30 @@
 #'     ) -> merge_result
 #'
 #'     target_result <- merge_result$data
-#'     input_genes <- target_result$gene_id[1:50]
+#'     test_geneSet <- target_result$gene_id[1:50]
 #'
 #'     related_peaks <- mm_geneBound(
 #'         peak_GR = ATAC_peak_GR,
 #'         Txdb = Txdb,
-#'         input_genes = input_genes
+#'         input_genes = test_geneSet
 #'     )
-#'     input_feature_id <- unique(related_peaks$feature_id)
-#'     # save(input_genes, file = "data/input_genes.rda", version = 2)
-#'     # save(input_feature_id, file = "data/input_feature_id.rda", version = 2)
+#'     test_featureSet <- unique(related_peaks$feature_id)
+#'     # save(test_geneSet, file = "data/test_geneSet.rda", version = 2)
+#'     # save(test_featureSet, file = "data/test_featureSet.rda", version = 2)
 #' }
 #' }
 #'
-"input_genes"
+"test_geneSet"
 
 
-#' input_feature_id
+#' test_featureSet
 #'
-#' @usage data(input_feature_id)
+#' @usage data(test_featureSet)
 #'
-#' @format feature_id vector
+#' @format character vector represent your interesting feature_id set
 #'
 #' @details
-#' For the detailed progress producing input_feature_id, you can see data(input_genes)
+#' For the detailed progress producing input_feature_id, you can see ?test_geneSet
 #'
 #'
-"input_feature_id"
+"test_featureSet"

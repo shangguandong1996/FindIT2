@@ -4,14 +4,17 @@
 \alias{mm_geneBound}
 \title{mm_geneBound}
 \usage{
-mm_geneBound(peak_GR, Txdb, input_genes, ...)
+mm_geneBound(peak_GR, Txdb, input_genes, verbose = TRUE, ...)
 }
 \arguments{
 \item{peak_GR}{peak GRange with a column named feature_id representing you peak name}
 
 \item{Txdb}{Txdb}
 
-\item{input_genes}{genes which you want to find related peak for}
+\item{input_genes}{a character vector which represent genes set
+which you want to find related peak for}
+
+\item{verbose}{whether you want to report detailed running message}
 
 \item{...}{additional arguments in distanceToNearest}
 }

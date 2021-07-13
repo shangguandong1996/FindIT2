@@ -11,13 +11,16 @@ findIT_MARA(
   TF_GR_database,
   log = TRUE,
   meanScale = TRUE,
-  output = "coef"
+  output = c("coef", "cor"),
+  verbose = TRUE
 )
 }
 \arguments{
-\item{input_feature_id}{peaks which you want to find influentail TF for}
+\item{input_feature_id}{a character vector which represent peaks set
+which you want to find influential TF for}
 
-\item{peak_GR}{all peak sets.Your input_feature_id is a part of it.}
+\item{peak_GR}{a GRange object represent your whole feature location with a
+column named feature_id, which your input_feature_id should a part of it.}
 
 \item{peakScoreMt}{peak count matrix.}
 
@@ -29,6 +32,8 @@ If you have TF_score column, MARA will consider it. otherwise, MARA will conside
 \item{meanScale}{whether you want to mean-centered per row}
 
 \item{output}{one of 'coef' and 'cor'. Default is coef}
+
+\item{verbose}{whether you want to report detailed running message}
 }
 \value{
 a data.frame
@@ -39,7 +44,7 @@ findIT_MARA
 \examples{
 
 data("ATAC_normCount")
-data("input_feature_id")
+data("test_featureSet")
 
 peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
 peak_GR <- loadPeakFile(peak_path)
@@ -51,7 +56,7 @@ ChIP_peak_GR$TF_id <- "AT1G28300"
 set.seed(20160806)
 
 findIT_MARA(
-    input_feature_id = input_feature_id,
+    input_feature_id = test_featureSet,
     peak_GR = peak_GR,
     peakScoreMt = ATAC_normCount,
     TF_GR_database = ChIP_peak_GR

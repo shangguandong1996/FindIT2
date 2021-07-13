@@ -11,6 +11,7 @@ utils::globalVariables(c("feature_id", "gene_id"))
 #' peak name
 #' @param Txdb Txdb
 #' @param reportGeneInfo whether you want to report full gene info
+#' @param verbose whether you want to report detailed running message
 #' @param ... additional arguments in distanceToNearest
 #'
 #' @return Granges object with annotated info
@@ -30,25 +31,30 @@ utils::globalVariables(c("feature_id", "gene_id"))
 mm_nearestGene <- function(peak_GR,
                            Txdb,
                            reportGeneInfo = FALSE,
+                           verbose = TRUE,
                            ...) {
 
     peak_GR <- check_peakGR(peak_GR = peak_GR,
                             Txdb = Txdb)
     check_duplicated(peak_GR)
 
-    cat("------------\n")
-    cat("annotating Peak using nearest gene mode begins\n")
-    cat(
+    if (verbose){
+    message("------------")
+    message("annotating Peak using nearest gene mode begins")
+    message(
         ">> preparing gene features information...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
     gene_location <- genes(Txdb)
     gene_start <- resize(gene_location, width = 1, fix = "start")
 
-    cat(
+    if (verbose){
+    message(
         ">> finding nearest gene and calculating distance...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
 
     # It seems that there is two distanceToNearest method,
     # one is from GenomicGRanges, another is from IRanges
@@ -65,16 +71,18 @@ mm_nearestGene <- function(peak_GR,
         )
     }
 
-    cat(
+    if (verbose){
+    message(
         ">> dealing with gene strand ...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
-    data.frame(
+    }
+    a <- data.frame(
         start_dis = start(peak_GR[queryHits(nearestHit)]) -
             start(gene_start[subjectHits(nearestHit)]),
         end_dis = end(peak_GR[queryHits(nearestHit)]) -
             start(gene_start[subjectHits(nearestHit)])
-    ) -> a
+    )
 
     # if start and end are all in TSS left, sum(x > 0)) it will be 2.
     # if start is in left while end is in right, sum(x > 0)) it will be 1
@@ -86,10 +94,12 @@ mm_nearestGene <- function(peak_GR,
 
     gene_id <- names(gene_start)[subjectHits(nearestHit)]
 
-    cat(
+    if (verbose){
+    message(
         ">> merging all info together ...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
 
     if (reportGeneInfo) {
         # someone's peakN may be too big, in this case,
@@ -107,10 +117,12 @@ mm_nearestGene <- function(peak_GR,
 
     metadata(peak_GR)$mmAnno_mode <- "nearestGene"
 
-    cat(
+    if (verbose){
+    message(
         ">> done\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
     return(peak_GR)
 }
 
@@ -127,6 +139,7 @@ mm_nearestGene <- function(peak_GR,
 #' @param upstream distance to start site(upstream)
 #' @param downstream distance to start site(downstream)
 #' @param reportGeneInfo whether you want to add gene info
+#' @param verbose whether you want to report detailed running message
 #' @param ... additional arguments in findOverlaps
 #'
 #' @return Granges object with annotated info
@@ -146,18 +159,22 @@ mm_geneScan <- function(peak_GR,
                         upstream = 3000,
                         downstream = 3000,
                         reportGeneInfo = FALSE,
+                        verbose = TRUE,
                         ...) {
 
     peak_GR <- check_peakGR(peak_GR = peak_GR,
                             Txdb = Txdb)
     check_duplicated(peak_GR)
 
-    cat("------------\n")
-    cat("annotatePeak using geneScan mode begins\n")
-    cat(
+    if (verbose){
+    message("------------")
+    message("annotatePeak using geneScan mode begins")
+    message(
         ">> preparing gene features information and scan region...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
+
     gene_location <- GenomicFeatures::genes(Txdb)
     gene_start <- resize(gene_location, width = 1, fix = "start")
 
@@ -172,26 +189,31 @@ mm_geneScan <- function(peak_GR,
             call. = FALSE
         )
     } else {
-        cat(
+        message(
             ">> some scan range may cross Chr bound, trimming...\t\t",
-            format(Sys.time(), "%Y-%m-%d %X"), "\n"
+            format(Sys.time(), "%Y-%m-%d %X")
         )
         gene_promoter <- trim(gene_promoter)
     }
 
-    cat(
+    if (verbose){
+    message(
         ">> finding overlap peak in gene scan region...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+
+    }
     overlapHits <- suppressWarnings(
         findOverlaps(gene_promoter,peak_GR,...)
         )
 
-    cat(
+    if (verbose){
+    message(
         ">> dealing with left peak not your gene scan region...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
-    # cat(">> these peak will be annotated by nearest gene\n")
+    }
+    # message(">> these peak will be annotated by nearest gene\n")
     peak_GR_left <- subset(
         peak_GR,
         !feature_id %in% unique(peak_GR[subjectHits(overlapHits)]$feature_id)
@@ -202,23 +224,27 @@ mm_geneScan <- function(peak_GR,
     nearest_hit <- suppressWarnings(distanceToNearest(peak_GR_left,gene_start))
     gene_TSS_left <- gene_start[subjectHits(nearest_hit)]
 
-    cat(
+    if (verbose){
+    message(
         ">> merging two set peaks...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
     final_gene_GR <- c(gene_start[queryHits(overlapHits)], gene_TSS_left)
     final_peak_GR <- c(peak_GR[subjectHits(overlapHits)], peak_GR_left)
 
-    cat(
+    if (verbose){
+    message(
         ">> calculating distance and dealing with gene strand...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
     dist <- suppressWarnings(distance(final_peak_GR,final_gene_GR))
 
-    data.frame(
+    a <- data.frame(
         start_dis = start(final_peak_GR) - start(final_gene_GR),
         end_dis = end(final_peak_GR) - start(final_gene_GR)
-    ) -> a
+    )
 
     sign_1 <- ifelse(apply(a, 1, function(x) sum(x > 0)) == 2, 1, -1)
     sign_2 <- ifelse(strand(final_gene_GR) == "+", 1, -1)
@@ -226,10 +252,13 @@ mm_geneScan <- function(peak_GR,
 
     gene_id <- names(final_gene_GR)
 
-    cat(
+    if (verbose) {
+    message(
         ">> merging all info together ...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
+
     if (reportGeneInfo) {
         mcols(final_peak_GR) <- cbind(
             mcols(final_peak_GR),
@@ -245,10 +274,12 @@ mm_geneScan <- function(peak_GR,
     metadata(final_peak_GR)$upstream <- upstream
     metadata(final_peak_GR)$downstream <- downstream
 
-    cat(
+    if (verbose){
+    message(
         ">> done\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
     return(final_peak_GR)
 }
 
@@ -263,7 +294,9 @@ mm_geneScan <- function(peak_GR,
 #'
 #' @param peak_GR peak GRange with a column named feature_id representing you peak name
 #' @param Txdb Txdb
-#' @param input_genes genes which you want to find related peak for
+#' @param input_genes a character vector which represent genes set
+#' which you want to find related peak for
+#' @param verbose whether you want to report detailed running message
 #' @param ... additional arguments in distanceToNearest
 #'
 #' @return data.frame with three column: related peak id, your input gene id,
@@ -282,21 +315,24 @@ mm_geneScan <- function(peak_GR,
 mm_geneBound <- function(peak_GR,
                          Txdb,
                          input_genes,
+                         verbose = TRUE,
                          ...) {
     # some genes maybe 12345……
     input_genes <- as.character(unique(input_genes))
 
-    peak_GR <- quiet(check_peakGR(peak_GR = peak_GR,
-                                  Txdb = Txdb))
+    peak_GR <- check_peakGR(peak_GR = peak_GR,Txdb = Txdb)
+
     check_duplicated(peak_GR)
 
-    cat(
+    if (verbose){
+    message(
         ">> using mm_nearestGene to annotate Peak...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
-    mmAnno <- quiet(mm_nearestGene(peak_GR = peak_GR,
-                                   Txdb = Txdb,
-                                   reportGeneInfo = FALSE,...))
+    }
+    mmAnno <- mm_nearestGene(peak_GR = peak_GR,
+                             Txdb = Txdb,
+                             reportGeneInfo = FALSE,...)
 
 
 
@@ -353,10 +389,12 @@ mm_geneBound <- function(peak_GR,
     message(msg)
 
 
-    cat(
+    if (verbose){
+    message(
         ">> using distanceToNearest to find nearest peak of these genes...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
     gene_start <- resize(gene_location_inChr, width = 1, fix = "start")
     gene_GR <- subset(gene_start, gene_id %in% noPeakBind_genes)
 
@@ -368,25 +406,29 @@ mm_geneBound <- function(peak_GR,
     ))
 
 
-    tibble::tibble(
+    left_anno <- tibble::tibble(
         feature_id = peak_GR[subjectHits(nearestHit)]$feature_id,
         gene_id = gene_GR[queryHits(nearestHit)]$gene_id,
         distanceToTSS_abs = mcols(nearestHit)$distance
-        ) -> left_anno
-
-    cat(
-        ">> merging all anno...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
     )
+
+    if (verbose){
+    message(
+        ">> merging all anno...\t\t",
+        format(Sys.time(), "%Y-%m-%d %X")
+    )
+    }
     final_anno <- rbind(
         mmAnno_inputGenes,
         left_anno
     )
 
-    cat(
+    if (verbose){
+    message(
         ">> done\t\t",
-        format(Sys.time(), "%Y-%m-%d %X"), "\n"
+        format(Sys.time(), "%Y-%m-%d %X")
     )
+    }
     return(final_anno)
 }
 

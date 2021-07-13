@@ -10,7 +10,8 @@ calcRP_region(
   Txdb,
   Chrs_included,
   decay_dist = 1000,
-  log_transform = FALSE
+  log_transform = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -21,12 +22,15 @@ while the colnames are sample names}
 
 \item{Txdb}{Txdb}
 
-\item{Chrs_included}{chromosome where you want to calculate gene RP in.
+\item{Chrs_included}{a character vector which represent
+chromosome where you want to calculate gene RP in.
 If Chromosome is not be set, it will calculate gene RP in all chromosomes in Txdb.}
 
 \item{decay_dist}{decay distance}
 
 \item{log_transform}{whether you want to log and norm your RP}
+
+\item{verbose}{whether you want to report detailed running message}
 }
 \value{
 a MultiAssayExperiment object containg detailed peak-RP-gene relationship

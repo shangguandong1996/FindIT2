@@ -4,7 +4,7 @@
 \alias{mm_nearestGene}
 \title{mm_nearestGene}
 \usage{
-mm_nearestGene(peak_GR, Txdb, reportGeneInfo = FALSE, ...)
+mm_nearestGene(peak_GR, Txdb, reportGeneInfo = FALSE, verbose = TRUE, ...)
 }
 \arguments{
 \item{peak_GR}{peak GRange with a column named feature_id representing you
@@ -13,6 +13,8 @@ peak name}
 \item{Txdb}{Txdb}
 
 \item{reportGeneInfo}{whether you want to report full gene info}
+
+\item{verbose}{whether you want to report detailed running message}
 
 \item{...}{additional arguments in distanceToNearest}
 }

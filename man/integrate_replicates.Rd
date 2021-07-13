@@ -4,12 +4,17 @@
 \alias{integrate_replicates}
 \title{integrate_replicates}
 \usage{
-integrate_replicates(mt, colData, fun = NULL, type = "value")
+integrate_replicates(
+  mt,
+  colData,
+  fun = NULL,
+  type = c("value", "rank", "rank_zscore", "pvalue")
+)
 }
 \arguments{
 \item{mt}{value matrix}
 
-\item{colData}{a data.frame with a single column. Rows of colData
+\item{colData}{a data.frame with a single column named with "type". Rows of colData
 correspond to columns of mt.}
 
 \item{fun}{the function you want to use. If set NULL, program will decide integrate

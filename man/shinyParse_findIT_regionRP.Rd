@@ -4,7 +4,7 @@
 \alias{shinyParse_findIT_regionRP}
 \title{shinyParse_findIT_regionRP}
 \usage{
-shinyParse_findIT_regionRP(merge_result, mode = "gene")
+shinyParse_findIT_regionRP(merge_result, mode = c("gene", "TF"))
 }
 \arguments{
 \item{merge_result}{the merge result from c(regionRP, TF_result)}

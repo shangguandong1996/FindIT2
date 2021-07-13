@@ -7,7 +7,7 @@
 plot_peakGeneAlias_summary(
   mmAnno,
   mmAnno_corFilter = NULL,
-  output_type = "gene_id",
+  output_type = c("gene_id", "feature_id"),
   fillColor = "#ca6b67"
 )
 }
@@ -16,7 +16,7 @@ plot_peakGeneAlias_summary(
 
 \item{mmAnno_corFilter}{the filter mmAnno object according to p-value or cor, defalut is NULL}
 
-\item{output_type}{one of 'feature_id' or 'gene_id'}
+\item{output_type}{one of 'gene_id' or 'feature_id'}
 
 \item{fillColor}{the bar plot color}
 }

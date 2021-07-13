@@ -12,10 +12,9 @@ utils::globalVariables(c(
 #' get associated peak number of gene and vice verse.
 #'
 #' @import rlang
-#' @importFrom magrittr %>%
 #'
 #' @param mmAnno the annotated GRange object from mm_geneScan or mm_nearestGene
-#' @param output_type one of 'feature_id' or 'gene_id'
+#' @param output_type one of 'gene_id' or 'feature_id'
 #' @param output_summary whether you want to detailed info
 #'
 #' @return data.frame
@@ -34,10 +33,10 @@ utils::globalVariables(c(
 #'
 #' }
 getAssocPairNumber <- function(mmAnno,
-                               output_type = "gene_id",
+                               output_type = c("gene_id", "feature_id"),
                                output_summary = FALSE) {
 
-    type <- match.arg(output_type, c("feature_id", "gene_id"))
+    type <- match.arg(output_type, c("gene_id", "feature_id"))
 
     if (type == "gene_id") {
         colName <- "peakNumber"
@@ -49,9 +48,9 @@ getAssocPairNumber <- function(mmAnno,
     # as.data.frame will report error(R 4.10 not)
     # So I set mmAnno into NULL to avoid this error
     names(mmAnno) <- NULL
-    mmAnno %>%
+    mmAnno_df <- mmAnno %>%
         as.data.frame(stringsAsFactors = FALSE) %>%
-        dplyr::select(feature_id, gene_id) -> mmAnno_df
+        dplyr::select(feature_id, gene_id)
 
     if ("mmCor_mode" %in% names(metadata(mmAnno))){
         if (metadata(mmAnno)$mmCor_mode == "enhancerPromoterCor") {
@@ -66,17 +65,17 @@ getAssocPairNumber <- function(mmAnno,
         }
     }
 
-    mmAnno_df %>%
+    pairNumber <- mmAnno_df %>%
         dplyr::group_by(!!sym(type)) %>%
         dplyr::summarise(!!sym(colName) := dplyr::n()) %>%
         dplyr::mutate(!!sym(type) := stringr::str_sort(!!sym(type),
             numeric = TRUE
-        )) -> pairNumber
+        ))
 
 
     freqName <- gsub("_id", "_freq", type)
 
-    pairNumber %>%
+    pairNumber_summary <- pairNumber %>%
         dplyr::group_by(!!sym(colName)) %>%
         dplyr::summarise(freqNumber = dplyr::n()) %>%
         dplyr::mutate(N = dplyr::case_when(
@@ -86,7 +85,7 @@ getAssocPairNumber <- function(mmAnno,
         dplyr::group_by(N) %>%
         dplyr::summarise(!!sym(freqName) := sum(freqNumber)) %>%
         dplyr::mutate(N = factor(N, levels = c(">=8", 7:1))) %>%
-        dplyr::mutate(N = droplevels(N)) -> pairNumber_summary
+        dplyr::mutate(N = droplevels(N))
     # when nearest mode, one peak-one gene
     # which means N only has 1
 
@@ -138,23 +137,23 @@ plot_annoDistance <- function(mmAnno,
     # p1
     mmAnno$abs_dist <- abs(mmAnno$distanceToTSS) + 1
     summary_value <- summary(mmAnno$abs_dist) - 1
-    paste(names(summary_value), ": ",
+    annotate_text <- paste(names(summary_value), ": ",
         round(summary_value, digits = 2), "  ",
         collapse = "\n"
-    ) -> annotate_text
+    )
 
     annotate_text <- paste0(
         "\nsummary of abs(distanceToTSS)  \n",
         annotate_text
     )
 
-    ggplot2::ggplot(data.frame(mmAnno), aes(x = abs_dist)) +
+    p1 <- ggplot2::ggplot(data.frame(mmAnno), aes(x = abs_dist)) +
         ggplot2::geom_density() +
         ggplot2::scale_x_log10() +
         ggplot2::theme_bw() +
         ggplot2::xlab("abs(distanceToTSS) + 1") +
         ggplot2::annotate("text", x = Inf, y = Inf, label = annotate_text,
-                          vjust = 1, hjust = 1) -> p1
+                          vjust = 1, hjust = 1)
 
 
     quantile_value <- quantile(mmAnno$distanceToTSS, quantile)
@@ -165,10 +164,10 @@ plot_annoDistance <- function(mmAnno,
     )
 
     summary_value <- summary(mmAnno$distanceToTSS)
-    paste(names(summary_value), ": ",
+    annotate_text <- paste(names(summary_value), ": ",
         round(summary_value, digits = 2), "  ",
         collapse = "\n"
-    ) -> annotate_text
+    )
 
     annotate_text <- paste0(
         "\nsummary of distanceToTSS  \n",
@@ -187,7 +186,7 @@ plot_annoDistance <- function(mmAnno,
         vjustvar = c(1, 1)
     )
 
-    ggplot2::ggplot(data.frame(mmAnno), aes(x = distanceToTSS)) +
+    p2 <- ggplot2::ggplot(data.frame(mmAnno), aes(x = distanceToTSS)) +
         ggplot2::geom_density() +
         ggplot2::coord_cartesian(xlim = quantile_value) +
         ggplot2::theme_bw() +
@@ -197,7 +196,7 @@ plot_annoDistance <- function(mmAnno,
             hjust = hjustvar,
             vjust = vjustvar,
             label = annotateText
-        )) -> p2
+        ))
 
     # https://github.com/thomasp85/patchwork/issues/246
     # for the patchwork operator
@@ -211,12 +210,11 @@ plot_annoDistance <- function(mmAnno,
 
 #' plot_peakGeneAlias_summary
 #'
-#' @importFrom magrittr %>%
 #' @importFrom ggplot2 aes
 #'
 #' @param mmAnno the annotated GRange object from mm_geneScan or mm_nearestGene
 #' @param mmAnno_corFilter the filter mmAnno object according to p-value or cor, defalut is NULL
-#' @param output_type one of 'feature_id' or 'gene_id'
+#' @param output_type one of 'gene_id' or 'feature_id'
 #' @param fillColor the bar plot color
 #'
 #' @return a ggplot object
@@ -236,8 +234,10 @@ plot_annoDistance <- function(mmAnno,
 #' }
 plot_peakGeneAlias_summary <- function(mmAnno,
                                        mmAnno_corFilter = NULL,
-                                       output_type = "gene_id",
+                                       output_type = c("gene_id", "feature_id"),
                                        fillColor = "#ca6b67") {
+
+    output_type <- match.arg(output_type, c("gene_id", "feature_id"))
 
     if (output_type == "gene_id") {
         ylabs <- paste0("The freq of each gene has N peak")
@@ -245,11 +245,11 @@ plot_peakGeneAlias_summary <- function(mmAnno,
         ylabs <- paste0("The freq of each peak has N gene")
     }
 
-    getAssocPairNumber(
+    summary <- getAssocPairNumber(
         mmAnno = mmAnno,
         output_type = output_type,
         output_summary = TRUE
-    ) -> summary
+    )
     colnames(summary)[2] <- "freq"
     # because I want to plot
     # bidirectional bar chart with positive labels on both sides ggplot2
@@ -258,28 +258,28 @@ plot_peakGeneAlias_summary <- function(mmAnno,
     if (!is.null(mmAnno_corFilter)) {
         summary[, 2] <- -summary[, 2]
 
-        getAssocPairNumber(
+        summary_filter <- getAssocPairNumber(
             mmAnno = mmAnno_corFilter,
             output_type = output_type,
             output_summary = TRUE
-        ) -> summary_filter
+        )
         colnames(summary_filter)[2] <- "freq"
     }
 
 
     if (is.null(mmAnno_corFilter)) {
-        ggplot2::ggplot(summary, aes(x = N, y = freq)) +
+        p <- ggplot2::ggplot(summary, aes(x = N, y = freq)) +
             ggplot2::geom_bar(
                 stat = "identity", color = "black",
                 fill = fillColor
             ) +
             ggplot2::geom_text(aes(label = abs(freq), y = freq)) +
             ggplot2::ylab(ylabs) +
-            ggplot2::coord_flip() -> p
+            ggplot2::coord_flip()
 
         return(p)
     } else {
-        ggplot2::ggplot(summary, aes(x = N, y = freq)) +
+        p1 <- ggplot2::ggplot(summary, aes(x = N, y = freq)) +
             ggplot2::geom_bar(stat = "identity", color = "black") +
             ggplot2::geom_text(aes(label = abs(freq), y = freq),
                 hjust = 1.1
@@ -299,7 +299,7 @@ plot_peakGeneAlias_summary <- function(mmAnno,
                     max(-summary$freq, summary_filter$freq) * 1.1
                 )
             ) +
-            ggplot2::ylab(ylabs) -> p1
+            ggplot2::ylab(ylabs)
 
 
         annotate_df <- data.frame(
@@ -318,7 +318,7 @@ plot_peakGeneAlias_summary <- function(mmAnno,
         annotate_df[is.na(annotate_df)] <- 1
 
 
-        p1 +
+        p <- p1 +
             ggplot2::geom_text(data = annotate_df, aes(
                 x = xpos,
                 y = yend,
@@ -337,7 +337,7 @@ plot_peakGeneAlias_summary <- function(mmAnno,
                 curvature = annotate_df[2, 6]
             ) +
             ggplot2::coord_flip() +
-            ggplot2::theme_bw() -> p
+            ggplot2::theme_bw()
 
         return(p)
     }

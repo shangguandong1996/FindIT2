@@ -10,7 +10,8 @@ calcRP_coverage(
   gene_included,
   Chrs_included,
   decay_dist = 1000,
-  scan_dist = 20000
+  scan_dist = 20000,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -18,13 +19,17 @@ calcRP_coverage(
 
 \item{Txdb}{Txdb}
 
-\item{gene_included}{genes which you want to calcluate RP for}
+\item{gene_included}{a character vector which represent gene set
+which you want to calculate RP for}
 
-\item{Chrs_included}{chromosome where you want to calcluate gene RP in}
+\item{Chrs_included}{a character vector which represent chromosomes
+where you want to calculate gene RP in}
 
 \item{decay_dist}{decay distance}
 
 \item{scan_dist}{scan distance}
+
+\item{verbose}{whether you want to report detailed running message}
 }
 \value{
 data.frame

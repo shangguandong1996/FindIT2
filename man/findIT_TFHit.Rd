@@ -12,11 +12,13 @@ findIT_TFHit(
   decay_dist = 1000,
   Chrs_included,
   background_genes = NULL,
-  background_number = 3000
+  background_number = 3000,
+  verbose = TRUE
 )
 }
 \arguments{
-\item{input_genes}{genes which you want to find influentail TF for}
+\item{input_genes}{a character vector which represent genes set
+which you want to find influential TF for}
 
 \item{Txdb}{Txdb}
 
@@ -26,12 +28,16 @@ findIT_TFHit(
 
 \item{decay_dist}{decay distance}
 
-\item{Chrs_included}{chromsomes which you want to sample background genes from}
+\item{Chrs_included}{a character vector represent chromosomes
+which you want to sample background genes from}
 
-\item{background_genes}{If you do not assign background gene , program will sample
+\item{background_genes}{a character vector which represent background genes set.
+If you do not assign background gene , program will sample
 background_number genes as background genes from all gene sets.}
 
 \item{background_number}{background genes number}
+
+\item{verbose}{whether you want to report detailed running message}
 }
 \value{
 data.frame
@@ -42,7 +48,7 @@ find influential TF of your input gene set based on TF ChIP-Seq or motif data
 \examples{
 
 if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
-    data("input_genes")
+    data("test_geneSet")
     Txdb <- TxDb.Athaliana.BioMart.plantsmart28
     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
 
@@ -52,7 +58,7 @@ if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
 
     set.seed(20160806)
     findIT_TFHit(
-        input_genes = input_genes,
+        input_genes = test_geneSet,
         Txdb = Txdb,
         TF_GR_database = ChIP_peak_GR
     ) -> result_findIT_TFHit
