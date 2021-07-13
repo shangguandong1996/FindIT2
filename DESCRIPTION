@@ -1,6 +1,6 @@
 Package: FindIT2
 Title: find influential TF and Target based on multi-omics data
-Version: 0.99.7
+Version: 0.99.8
 Date: 2021-06-07
 Authors@R:
     c(

@@ -7,12 +7,12 @@
 jaccard_findIT_TTpair(input_genes, TF_target_database, input_TF_id)
 }
 \arguments{
+\item{input_genes}{a character vector which represent gene set
+which you want to find influential TF for (same as your find_IT_TTpair parameter)}
+
 \item{TF_target_database}{TF_target pair data}
 
 \item{input_TF_id}{TF_id which you want to calculate jaccard index for}
-
-\item{input_feature_id}{a character vector which represent peaks set
-which you want to find influential TF for (same as your find_IT_TTpair parameter)}
 }
 \value{
 jaccard similarity matrix
