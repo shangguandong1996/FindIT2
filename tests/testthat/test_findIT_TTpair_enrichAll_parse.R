@@ -14,16 +14,16 @@ TF_GR_database <- loadPeakFile(TF_GR_database_path)
 TF_GR_database$TF_id <- TF_GR_database$feature_id
 
 test_that("jaccard findIT TTpair test",{
-    findIT_TTPair(
+    result_findIT_TTPair <- findIT_TTPair(
         input_genes = test_geneSet,
         TF_target_database = TF_target_database
-    ) -> result_findIT_TTPair
+    )
 
-    jaccard_findIT_TTpair(
+    jaccard_data <- jaccard_findIT_TTpair(
         input_genes = test_geneSet,
         TF_target_database = TF_target_database,
         input_TF_id = result_findIT_TTPair$TF_id[1:3]
-    ) -> jaccard_data
+    )
 
     expect_true(is.matrix(jaccard_data))
 
@@ -44,12 +44,12 @@ test_that("jaccard findIT enrich in All test",{
         )
     ))
 
-    jaccard_findIT_enrichInAll(
+    jaccard_result <- jaccard_findIT_enrichInAll(
         input_feature_id = test_featureSet,
         peak_GR = peak_GR,
         TF_GR_database = TF_GR_database,
         input_TF_id = c("AT2G36270", "AT3G59060", "AT5G24110")
-    ) -> jaccard_result
+    )
 
     expect_equal(jaccard_result[1, 1], 0)
     expect_equal(jaccard_result[1, 2], 0.2857143, tolerance = 1e-5)

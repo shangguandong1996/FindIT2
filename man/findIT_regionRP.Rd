@@ -55,21 +55,21 @@ if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
 
     mmAnno <- mm_geneScan(peak_GR, Txdb)
 
-    calcRP_region(
+    regionRP <- calcRP_region(
         mmAnno = mmAnno,
         peakScoreMt = ATAC_normCount,
         Txdb = Txdb,
         Chrs_included = "Chr5"
-    ) -> regionRP
+    )
 
     set.seed(20160806)
-    findIT_regionRP(
+    result_findIT_regionRP <- findIT_regionRP(
         regionRP = regionRP,
         Txdb = Txdb,
         TF_GR_database = ChIP_peak_GR,
         input_genes = test_geneSet,
         background_number = 3000
-    ) -> result_findIT_regionRP
+    )
 
 }
 }

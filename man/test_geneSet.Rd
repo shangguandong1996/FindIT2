@@ -39,10 +39,10 @@ if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
     )
 
     data("RNADiff_LEC2_GR")
-    integrate_ChIP_RNA(
+     merge_result <- integrate_ChIP_RNA(
         result_geneRP = peakRP_gene,
         result_geneDiff = RNADiff_LEC2_GR
-    ) -> merge_result
+    )
 
     target_result <- merge_result$data
     test_geneSet <- target_result$gene_id[1:50]

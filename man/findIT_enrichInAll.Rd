@@ -30,9 +30,9 @@ ChIP_peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
 ChIP_peak_GR <- loadPeakFile(ChIP_peak_path)
 ChIP_peak_GR$TF_id <- "AT1G28300"
 
-findIT_enrichInAll(
+ result_findIT_enrichInAll <- findIT_enrichInAll(
     input_feature_id = test_featureSet,
     peak_GR = peak_GR,
     TF_GR_database = ChIP_peak_GR
-) -> result_findIT_enrichInAll
+)
 }

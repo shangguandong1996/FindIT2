@@ -49,11 +49,11 @@ if (require(TxDb.Athaliana.BioMart.plantsmart28)){
     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
     peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
     peak_GR <- loadPeakFile(peak_path)[1:100]
-    enhancerPromoterCor(
+    mm_ePLink <- enhancerPromoterCor(
     peak_GR = peak_GR,
     Txdb = Txdb,
     peakScoreMt = ATAC_normCount,
-    parallel = FALSE) -> mm_ePLink
+    parallel = FALSE)
 }
 
 

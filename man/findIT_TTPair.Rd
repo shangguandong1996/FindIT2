@@ -37,8 +37,8 @@ find influential TF of your input gene set based on public TF-Target data
 data("TF_target_database")
 data("test_geneSet")
 
-findIT_TTPair(
+result_findIT_TTPair <- findIT_TTPair(
     input_genes = test_geneSet,
     TF_target_database = TF_target_database
-) -> result_findIT_TTPair
+)
 }

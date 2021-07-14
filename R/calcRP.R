@@ -244,12 +244,12 @@ calcRP_coverage <- function(bwFile,
 #'     peak_GR <- loadPeakFile(peak_path)
 #'     mmAnno <- mm_geneScan(peak_GR, Txdb)
 #'
-#'     calcRP_region(
+#'     regionRP <- calcRP_region(
 #'         mmAnno = mmAnno,
 #'         peakScoreMt = ATAC_normCount,
 #'         Txdb = Txdb,
 #'         Chrs_included = "Chr5"
-#'     ) -> regionRP
+#'     )
 #'
 #'     sumRP <- assays(regionRP)$sumRP
 #'     fullRP <- assays(regionRP)$fullRP

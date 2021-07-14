@@ -35,18 +35,18 @@ utils::globalVariables(c(
 #'         type = gsub("_R[0-9]", "", colnames(ATAC_normCount))
 #'     )
 #'
-#'     integrate_replicates(ATAC_normCount, ATAC_colData) -> ATAC_normCount_merge
+#'     ATAC_normCount_merge <- integrate_replicates(ATAC_normCount, ATAC_colData)
 #'     RNA_colData <- data.frame(
 #'         row.names = colnames(RNA_normCount),
 #'         type = gsub("_R[0-9]", "", colnames(RNA_normCount))
 #'     )
-#'     integrate_replicates(RNA_normCount, RNA_colData) -> RNA_normCount_merge
-#'     peakGeneCor(
+#'     RNA_normCount_merge <- integrate_replicates(RNA_normCount, RNA_colData)
+#'     mmAnnoCor <- peakGeneCor(
 #'         mmAnno = mmAnno,
 #'         peakScoreMt = ATAC_normCount_merge,
 #'         geneScoreMt = RNA_normCount_merge,
 #'         parallel = FALSE
-#'     ) -> mmAnnoCor
+#'     )
 #'
 #'     mmAnnoCor
 #'
@@ -178,11 +178,11 @@ peakGeneCor <- function(mmAnno,
 #'     seqlevels(Txdb) <- paste0("Chr", c(1:5, "M", "C"))
 #'     peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
 #'     peak_GR <- loadPeakFile(peak_path)[1:100]
-#'     enhancerPromoterCor(
+#'     mm_ePLink <- enhancerPromoterCor(
 #'     peak_GR = peak_GR,
 #'     Txdb = Txdb,
 #'     peakScoreMt = ATAC_normCount,
-#'     parallel = FALSE) -> mm_ePLink
+#'     parallel = FALSE)
 #' }
 #'
 #'

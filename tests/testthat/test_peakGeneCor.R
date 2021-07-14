@@ -18,18 +18,18 @@ RNA_colData <- data.frame(
 )
 integrate_replicates(RNA_normCount, RNA_colData) -> RNA_normCount_merge
 
-suppressWarnings(peakGeneCor(
+mmAnnoCor <- suppressWarnings(peakGeneCor(
     mmAnno = mmAnno,
     peakScoreMt = ATAC_normCount_merge,
     geneScoreMt = RNA_normCount_merge,
     parallel = FALSE
-)) -> mmAnnoCor
+))
 
-enhancerPromoterCor(
+mm_ePLink <- enhancerPromoterCor(
     peak_GR = peak_GR,
     Txdb = Txdb,
     peakScoreMt = ATAC_normCount,
-    parallel = FALSE) -> mm_ePLink
+    parallel = FALSE)
 
 
 test_that("peakGeneCor test",{

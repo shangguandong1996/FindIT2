@@ -27,8 +27,9 @@ data <- read.table("~/reference/annoation/Athaliana/TF_target/iGRN_network_full.
 data \%>\%
 rename(TF_id = V1, target_gene = V2) \%>\%
 select(TF_id, target_gene) \%>\%
-filter(TF_id \%in\% c("AT1G28300", "AT5G63790", "AT5G24110", "AT3G23250")) \%>\%
-as.data.frame() -> TF_target_database
+TF_target_database <- filter(TF_id \%in\% c("AT1G28300",
+"AT5G63790", "AT5G24110", "AT3G23250")) \%>\%
+as.data.frame()
 
 save(TF_target_database, file = "inst/extdata/TF_target_database.rda", version = 2,
      compress = "bzip2")

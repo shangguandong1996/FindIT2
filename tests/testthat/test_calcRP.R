@@ -23,24 +23,24 @@ test_that("calcRP_region test",{
     peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
     peak_GR <- loadPeakFile(peak_path)
     mmAnno <- mm_geneScan(peak_GR, Txdb)
-    calcRP_region(
+    regionRP <- calcRP_region(
         mmAnno = mmAnno,
         peakScoreMt = ATAC_normCount,
         Txdb = Txdb,
         Chrs_included = "Chr5"
-    ) -> regionRP
+    )
 
     expect_s4_class(regionRP, "MultiAssayExperiment")
     expect_equal(assays(regionRP)$sumRP[5,5], 235.44406)
     expect_equal(assays(regionRP)$fullRP[5,5], 138.69528)
 
-    calcRP_region(
+    regionRP <- calcRP_region(
         mmAnno = mmAnno,
         peakScoreMt = ATAC_normCount,
         Txdb = Txdb,
         Chrs_included = "Chr5",
         log_transform = TRUE
-    ) -> regionRP
+    )
 
     expect_equal(assays(regionRP)$sumRP[5,5], 1.12383564)
 

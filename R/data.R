@@ -49,8 +49,9 @@
 #' data %>%
 #' rename(TF_id = V1, target_gene = V2) %>%
 #' select(TF_id, target_gene) %>%
-#' filter(TF_id %in% c("AT1G28300", "AT5G63790", "AT5G24110", "AT3G23250")) %>%
-#' as.data.frame() -> TF_target_database
+#' TF_target_database <- filter(TF_id %in% c("AT1G28300",
+#' "AT5G63790", "AT5G24110", "AT3G23250")) %>%
+#' as.data.frame()
 #'
 #' save(TF_target_database, file = "inst/extdata/TF_target_database.rda", version = 2,
 #'      compress = "bzip2")
@@ -93,10 +94,10 @@
 #'     )
 #'
 #'     data("RNADiff_LEC2_GR")
-#'     integrate_ChIP_RNA(
+#'      merge_result <- integrate_ChIP_RNA(
 #'         result_geneRP = peakRP_gene,
 #'         result_geneDiff = RNADiff_LEC2_GR
-#'     ) -> merge_result
+#'     )
 #'
 #'     target_result <- merge_result$data
 #'     test_geneSet <- target_result$gene_id[1:50]

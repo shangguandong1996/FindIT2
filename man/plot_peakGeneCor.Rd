@@ -51,12 +51,12 @@ if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
         type = gsub("_R[0-9]", "", colnames(RNA_normCount))
     )
     integrate_replicates(RNA_normCount, RNA_colData) -> RNA_normCount_merge
-    peakGeneCor(
+    mmAnnoCor <- peakGeneCor(
         mmAnno = mmAnno,
         peakScoreMt = ATAC_normCount_merge,
         geneScoreMt = RNA_normCount_merge,
         parallel = FALSE
-    ) -> mmAnnoCor
+    )
 
     plot_peakGeneCor(mmAnnoCor, select_gene = "AT5G01010")
 

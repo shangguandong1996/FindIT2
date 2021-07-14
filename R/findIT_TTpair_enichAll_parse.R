@@ -14,10 +14,10 @@ utils::globalVariables(c("hit"))
 #'
 #' data("TF_target_database")
 #' data("test_geneSet")
-#' findIT_TTPair(
+#' result_findIT_TTPair <- findIT_TTPair(
 #'     input_genes = test_geneSet,
 #'     TF_target_database = TF_target_database
-#' ) -> result_findIT_TTPair
+#' )
 #'
 #' jaccard_findIT_TTpair(
 #'     input_genes = test_geneSet,
@@ -73,11 +73,11 @@ jaccard_findIT_TTpair <- function(input_genes,
 #' ChIP_peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
 #' ChIP_peak_GR <- loadPeakFile(ChIP_peak_path)
 #' ChIP_peak_GR$TF_id <- "AT1G28300"
-#' findIT_enrichInAll(
+#' result_findIT_enrichInAll <- findIT_enrichInAll(
 #'     input_feature_id = test_featureSet,
 #'     peak_GR = peak_GR,
 #'     TF_GR_database = ChIP_peak_GR
-#' ) -> result_findIT_enrichInAll
+#' )
 #'
 #' jaccard_findIT_enrichInAll(
 #'     input_feature_id = test_featureSet,

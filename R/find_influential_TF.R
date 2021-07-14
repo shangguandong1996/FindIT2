@@ -50,21 +50,21 @@ utils::globalVariables(c("hit_N", "TF_score"))
 #'
 #'     mmAnno <- mm_geneScan(peak_GR, Txdb)
 #'
-#'     calcRP_region(
+#'     regionRP <- calcRP_region(
 #'         mmAnno = mmAnno,
 #'         peakScoreMt = ATAC_normCount,
 #'         Txdb = Txdb,
 #'         Chrs_included = "Chr5"
-#'     ) -> regionRP
+#'     )
 #'
 #'     set.seed(20160806)
-#'     findIT_regionRP(
+#'     result_findIT_regionRP <- findIT_regionRP(
 #'         regionRP = regionRP,
 #'         Txdb = Txdb,
 #'         TF_GR_database = ChIP_peak_GR,
 #'         input_genes = test_geneSet,
 #'         background_number = 3000
-#'     ) -> result_findIT_regionRP
+#'     )
 #'
 #' }
 findIT_regionRP <- function(regionRP,
@@ -323,10 +323,10 @@ findIT_regionRP <- function(regionRP,
 #' data("TF_target_database")
 #' data("test_geneSet")
 #'
-#' findIT_TTPair(
+#' result_findIT_TTPair <- findIT_TTPair(
 #'     input_genes = test_geneSet,
 #'     TF_target_database = TF_target_database
-#' ) -> result_findIT_TTPair
+#' )
 findIT_TTPair <- function(input_genes,
                           TF_target_database,
                           gene_background = NULL,
@@ -465,11 +465,11 @@ findIT_TTPair <- function(input_genes,
 #'     ChIP_peak_GR$TF_id <- "AT1G28300"
 #'
 #'     set.seed(20160806)
-#'     findIT_TFHit(
+#'     result_findIT_TFHit <- findIT_TFHit(
 #'         input_genes = test_geneSet,
 #'         Txdb = Txdb,
 #'         TF_GR_database = ChIP_peak_GR
-#'     ) -> result_findIT_TFHit
+#'     )
 #'
 #' }
 findIT_TFHit <- function(input_genes,
@@ -683,12 +683,12 @@ findIT_TFHit <- function(input_genes,
 #' ChIP_peak_GR$TF_id <- "AT1G28300"
 #'
 #' set.seed(20160806)
-#' findIT_enrichInShuffle(
+#' result_findIT_enrichInShuffle <- findIT_enrichInShuffle(
 #'     input_feature_id = test_featureSet,
 #'     peak_GR = peak_GR,
 #'     TF_GR_database = ChIP_peak_GR,
 #'     shuffleN = 10
-#' ) -> result_findIT_enrichInShuffle
+#' )
 findIT_enrichInShuffle <- function(input_feature_id,
                                    peak_GR,
                                    TF_GR_database,
@@ -817,11 +817,11 @@ findIT_enrichInShuffle <- function(input_feature_id,
 #' ChIP_peak_GR <- loadPeakFile(ChIP_peak_path)
 #' ChIP_peak_GR$TF_id <- "AT1G28300"
 #'
-#' findIT_enrichInAll(
+#'  result_findIT_enrichInAll <- findIT_enrichInAll(
 #'     input_feature_id = test_featureSet,
 #'     peak_GR = peak_GR,
 #'     TF_GR_database = ChIP_peak_GR
-#' ) -> result_findIT_enrichInAll
+#' )
 findIT_enrichInAll <- function(input_feature_id,
                                peak_GR,
                                TF_GR_database) {
@@ -930,12 +930,12 @@ findIT_enrichInAll <- function(input_feature_id,
 #'
 #' set.seed(20160806)
 #'
-#' findIT_MARA(
+#' result_findIT_MARA <- findIT_MARA(
 #'     input_feature_id = test_featureSet,
 #'     peak_GR = peak_GR,
 #'     peakScoreMt = ATAC_normCount,
 #'     TF_GR_database = ChIP_peak_GR
-#' ) -> result_findIT_MARA
+#' )
 #'
 findIT_MARA <- function(input_feature_id,
                         peak_GR,

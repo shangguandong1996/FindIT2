@@ -52,10 +52,10 @@ ChIP_peak_GR <- loadPeakFile(ChIP_peak_path)
 ChIP_peak_GR$TF_id <- "AT1G28300"
 
 set.seed(20160806)
-findIT_enrichInShuffle(
+result_findIT_enrichInShuffle <- findIT_enrichInShuffle(
     input_feature_id = test_featureSet,
     peak_GR = peak_GR,
     TF_GR_database = ChIP_peak_GR,
     shuffleN = 10
-) -> result_findIT_enrichInShuffle
+)
 }

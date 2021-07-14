@@ -24,10 +24,10 @@ jaccard_findIT_TTpair
 
 data("TF_target_database")
 data("test_geneSet")
-findIT_TTPair(
+result_findIT_TTPair <- findIT_TTPair(
     input_genes = test_geneSet,
     TF_target_database = TF_target_database
-) -> result_findIT_TTPair
+)
 
 jaccard_findIT_TTpair(
     input_genes = test_geneSet,

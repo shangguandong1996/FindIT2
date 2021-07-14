@@ -57,11 +57,11 @@ if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
     ChIP_peak_GR$TF_id <- "AT1G28300"
 
     set.seed(20160806)
-    findIT_TFHit(
+    result_findIT_TFHit <- findIT_TFHit(
         input_genes = test_geneSet,
         Txdb = Txdb,
         TF_GR_database = ChIP_peak_GR
-    ) -> result_findIT_TFHit
+    )
 
 }
 }

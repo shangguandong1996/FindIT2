@@ -11,15 +11,15 @@ peak_GR <- loadPeakFile(peak_path)
 test_that("integrate ChIP RNA test", {
     mmAnno <- mm_geneScan(peak_GR, Txdb)
 
-    calcRP_TFHit(
+    result_geneRP <- calcRP_TFHit(
         mmAnno = mmAnno,
         Txdb = Txdb
-    ) -> result_geneRP
+    )
 
-    integrate_ChIP_RNA(
+    merge_data <- integrate_ChIP_RNA(
         result_geneRP = result_geneRP,
         result_geneDiff = RNADiff_LEC2_GR
-    ) -> merge_data
+    )
 
     pb <- ggplot2::ggplot_build(merge_data)
 

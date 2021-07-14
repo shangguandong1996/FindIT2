@@ -55,11 +55,11 @@ ChIP_peak_GR$TF_id <- "AT1G28300"
 
 set.seed(20160806)
 
-findIT_MARA(
+result_findIT_MARA <- findIT_MARA(
     input_feature_id = test_featureSet,
     peak_GR = peak_GR,
     peakScoreMt = ATAC_normCount,
     TF_GR_database = ChIP_peak_GR
-) -> result_findIT_MARA
+)
 
 }

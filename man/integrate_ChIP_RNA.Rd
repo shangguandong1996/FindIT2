@@ -38,15 +38,15 @@ if (require(TxDb.Athaliana.BioMart.plantsmart28)) {
     peak_GR <- loadPeakFile(peak_path)
     mmAnno <- mm_geneScan(peak_GR, Txdb)
 
-    calcRP_TFHit(
+    result_geneRP <- calcRP_TFHit(
         mmAnno = mmAnno,
         Txdb = Txdb
-    ) -> result_geneRP
+    )
     # output a plot
-    integrate_ChIP_RNA(
+    merge_data <- integrate_ChIP_RNA(
         result_geneRP = result_geneRP,
         result_geneDiff = RNADiff_LEC2_GR
-    ) -> merge_data
+    )
     # if you want to extract merge target data
     target_data <- merge_data$data
 
