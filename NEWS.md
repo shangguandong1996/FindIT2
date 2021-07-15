@@ -1,14 +1,7 @@
-# FindIT2 0.99.0
+# Changes in version 0.99.10 (2021-07-15)
 
-NEW FEATURES
+- move all shiny function in FindIT2 into [InteractiveFindIT2](https://github.com/shangguandong1996/InteractiveFindIT2)
 
-* Added a `NEWS.md` file to track changes to the package.
+# Changes in version 0.99.0 (2021-06-27)
 
-SIGNIFICANT USER-VISIBLE CHANGES
-
-* Your main changes to a function `foo()` or parameter `param`.
-
-BUG FIXES
-
-* Your bug fixes. See more details at
-<http://bioconductor.org/developers/package-guidelines/#news>.
+- Submitted to Bioconductor

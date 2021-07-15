@@ -13,7 +13,7 @@ plot_peakGeneCor(
 )
 }
 \arguments{
-\item{mmAnnoCor}{the annotated GRange object from peakGeneCor}
+\item{mmAnnoCor}{the annotated GRange object from peakGeneCor or enhancerPromoterCor}
 
 \item{select_gene}{a gene_id which you want to show}
 

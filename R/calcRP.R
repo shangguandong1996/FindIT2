@@ -312,7 +312,7 @@ calcRP_region <- function(mmAnno,
 
     if (verbose) {
     message(
-        ">> pre-filling", length(noRPGene), "noAssoc peak gene's RP with 0...\t\t",
+        ">> pre-filling ", length(noRPGene), " noAssoc peak gene's RP with 0...\t\t",
         format(Sys.time(), "%Y-%m-%d %X")
     )
     }

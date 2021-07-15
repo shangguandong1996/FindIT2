@@ -10,7 +10,7 @@ utils::globalVariables(c(
     "TF_id", "num_TFHit_bg", "num_topLeft", "num_bottomLeft",
     "num_topRight", "num_TFHit_inputFeature"
 ))
-utils::globalVariables(c("hit_N", "TF_score"))
+utils::globalVariables(c(".", "hit_N", "TF_score"))
 
 
 #' findI(nfluential)T(F)_regionRP

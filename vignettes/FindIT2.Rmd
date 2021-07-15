@@ -3,7 +3,7 @@ title: "FindIT2:Find influential TF and influential Target"
 author: 
   - name: Guandong Shang
     affiliation:
-    - National Key Laboratory of Plant Molecular Genetics (NKLPMG), CAS Center for Excellence in Molecular Plant Sciences, Institute of Plant Physiology and Ecology (SIPPE), 200032 Shanghai, P. R. China
+    - National Key Laboratory of Plant Molecular Genetics (NKLPMG), CAS Center for Excellence in Molecular Plant Sciences, Institute of Plant Physiology and Ecology (SIPPE), 200032, Shanghai, P. R. China
     - University of Chinese Academy of Sciences, Shanghai 200032, P. R. China
     email: shangguandong@cemps.ac.cn
 output: 
@@ -914,14 +914,16 @@ heatmap(LEC2_percent_mt, Colv = NA, scale = "none")
 
 
 If above analysis is too complex for you, I also provide the shiny function
-`shinyParse_findIT_regionRP` to help you parse and understend the result.
+`shinyParse_findIT_regionRP` from 
+[InteractiveFindIT2](https://github.com/shangguandong1996/InteractiveFindIT2) to help you 
+explore the result interactively.
 
 ```{r, eval = FALSE}
 # Before using shiny function, you should merge the regionRP and result_findIT_regionRP firstly.
 merge_result <- c(regionRP, result_findIT_regionRP)
-shinyParse_findIT_regionRP(merge_result = merge_result, mode = "gene")
+InteractiveFindIT2::shinyParse_findIT_regionRP(merge_result = merge_result, mode = "gene")
 
-shinyParse_findIT_regionRP(merge_result = merge_result,mode = "TF")
+InteractiveFindIT2::shinyParse_findIT_regionRP(merge_result = merge_result,mode = "TF")
 ```
 
 ## Find IT of input genes based on motif activity response{#findITMARA}
@@ -1083,8 +1085,12 @@ plot_peakGeneAlias_summary(mmAnno = mmAnnoCor,
 
 ```
 
+
+the shiny function `shinyParse_peakGeneCor` from 
+[InteractiveFindIT2](https://github.com/shangguandong1996/InteractiveFindIT2) to help you 
+explore the result interactively
 ```{r eval=FALSE}
-shinyParse_peakGeneCor(mmAnnoCor)
+InteractiveFindIT2::shinyParse_peakGeneCor(mmAnnoCor)
 ```
 
 
@@ -1120,8 +1126,11 @@ plot_peakGeneAlias_summary(mmAnno = mmAnnoCor_linkEP,
                            mmAnno_corFilter = subset(mmAnnoCor_linkEP, cor > 0.8))
 ```
 
+the shiny function `shinyParse_peakGeneCor` from 
+[InteractiveFindIT2](https://github.com/shangguandong1996/InteractiveFindIT2) to help you 
+explore the result interactively
 ```{r eval=FALSE}
-shinyParse_peakGeneCor(mmAnnoCor_linkEP)
+InteractiveFindIT2::shinyParse_peakGeneCor(mmAnnoCor_linkEP)
 ```
 
 # Integrate result
