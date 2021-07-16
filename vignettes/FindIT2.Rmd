@@ -671,47 +671,19 @@ TF_GR_database
 
 ```
 
-## Find IT of input peak based on shuffle
 
-When collecting several samples ATAC data and get a merge peak set, you do
-k-means to cluster peak. Then you want to know which TF is enrichment in your
-specific peak set compared with the total peak set. In this condition, you can
-use the `findIT_enrichInShuffle`, it will sample same set number feature_id as
-your `input_feature_id`, then it will calculate the p-value to mark the
-significant of specific TF.
-
-The object you may need to consider:
-
-- shuffleN: 
-
-The more you sample, the more accurate the final result. But it will make
-function run more time.
-
-```{r "findIT_enrichInShuffle"}
-# For repeatability of results, you should set seed.
-set.seed(20160806)
-findIT_enrichInShuffle(input_feature_id = input_feature_id,
-                       peak_GR = ATAC_peak_GR,
-                       TF_GR_database = TF_GR_database,
-                       shuffleN = 10) -> result_enrichInShuffle
-
-# you can see AT1G28300 is top1
-result_enrichInShuffle
-
-```
 
 ## Find IT of input peak based on fisher test
 
 You can also find the enrichment of TF using `findIT_enrichFisher`, it use the 
-same theory like GO-enrich analysis. The background is total ATAC peak, and the 
-select set is your `input_feature_id`. Compared with `findIT_enrichInShuffle` 
-above, its runs more quickly. But it will have a little problem when using motif
-scan result as `TF_GR_database`. A TF may hit more than one time in a peak, 
-however, here I treat it as one because I want the whole frame to be more like 
-GO enrichment analysis. Actually, the TF hit number can offer some other useful 
-information, which you can see in `findIT_MARA`. But it will do not have a big 
-effect on the final result. After all, what we really need is TF rank instead of
-p-value.
+same theory like GO-enrich analysis. The background is total ATAC peak, and the
+select set is your `input_feature_id`. Compared with `findIT_enrichWilcox` 
+above, its runs more quickly. But it will have a little problem when using 
+motif scan result as `TF_GR_database`. A TF may hit more than one time in a 
+peak,  however, here I treat it as one because I want the whole frame to be 
+more like GO enrichment analysis. Actually, the TF hit number can offer some 
+other useful information, which you can see in `findIT_MARA`. But it will do 
+not have a big effect on the final result. After all, what we really need is TF rank instead of p-value.
 
 ```{r "findIT_enrichFisher"}
 findIT_enrichFisher(input_feature_id = input_feature_id, 
@@ -1007,7 +979,6 @@ using `integrate_replicates`.
 ```{r}
 list(TF_Hit = result_TFHit,
      enrichAll = result_enrichFisher,
-     enrichShuffle = result_enrichInShuffle,
      TT_pair = result_TTpair
      ) -> rank_merge_list
 purrr::map(names(rank_merge_list), .f = function(x){

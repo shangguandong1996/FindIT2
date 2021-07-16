@@ -75,18 +75,6 @@ test_that("findIT TFHit test", {
 })
 
 
-test_that("findIT enrich In shuffle test", {
-    set.seed(20160806)
-
-    result_findIT_enrichInShuffle <- findIT_enrichInShuffle(
-        input_feature_id = test_featureSet,
-        peak_GR = peak_GR,
-        TF_GR_database = ChIP_peak_GR,
-        shuffleN = 10
-    )
-
-    expect_equal(result_findIT_enrichInShuffle$shuffleMean_hitN[1], 41.1)
-})
 
 
 test_that("findIT enrich In All test", {

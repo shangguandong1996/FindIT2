@@ -99,6 +99,7 @@ findIT_regionRP <- function(regionRP,
 
     } else if (mean(background_genes %in% all_geneSets) < 1) {
         dropN <- sum(!background_genes %in% all_geneSets)
+        background_genes <- background_genes[background_genes %in% all_geneSets]
         msg <- paste0(
             dropN,
             " background genes are not in your Txdb, ",
@@ -642,157 +643,6 @@ findIT_TFHit <- function(input_genes,
 
 
 
-
-#' findI(nfluential)T(F)_enrichInShuffle
-#'
-#' find influential TF of your input peak set compared with your whole peak sets
-#' based on TF ChIP-Seq or motif data.
-#'
-#' @import BiocParallel
-#' @importFrom stats ecdf
-#'
-#' @param input_feature_id a character vector which represent peaks set
-#' which you want to find influential TF for
-#' @param peak_GR a GRange object represent your whole feature location with a
-#' column named feature_id, which your input_feature_id should a part of it.
-#' @param TF_GR_database TF peak GRange with a column named TF_id representing you TF name
-#' @param shuffleN shuffle number
-#' @param verbose whether you want to report detailed running message
-#'
-#' @return data.frame
-#' @export
-#'
-#' @details
-#' Please note that enrichInShuffle is not useful in large number of peaks.Because there will
-#' be many TF co-regulate your region, which means there are many TF will be significant.
-#' And in this condition, there are many TF's p-value will be 0 even you shffule 1e4 or more times.
-#' So the rank and p-value will be no useful.
-#'
-#' But it may be useful in about small number of peaks. It can consider the true hit numebrs in your peaks
-#' instead of 1 like findIT_enichInAll. And I also find fihser test in findIT_enrichFisher more not report significant
-#' result in small number peaks.
-#'
-#'
-#' @examples
-#' data("test_featureSet")
-#' peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
-#' peak_GR <- loadPeakFile(peak_path)
-#'
-#' ChIP_peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
-#' ChIP_peak_GR <- loadPeakFile(ChIP_peak_path)
-#' ChIP_peak_GR$TF_id <- "AT1G28300"
-#'
-#' set.seed(20160806)
-#' result_findIT_enrichInShuffle <- findIT_enrichInShuffle(
-#'     input_feature_id = test_featureSet,
-#'     peak_GR = peak_GR,
-#'     TF_GR_database = ChIP_peak_GR,
-#'     shuffleN = 10
-#' )
-findIT_enrichInShuffle <- function(input_feature_id,
-                                   peak_GR,
-                                   TF_GR_database,
-                                   shuffleN = 1000,
-                                   verbose = TRUE) {
-
-    check_colnames("feature_id", peak_GR)
-    check_duplicated(peak_GR)
-    check_colnames("TF_id", TF_GR_database)
-
-
-    input_feature_id <- unique(input_feature_id)
-    all_feature_id <- unique(peak_GR$feature_id)
-    names(peak_GR) <- peak_GR$feature_id
-    input_GR <- peak_GR[input_feature_id]
-
-    if (verbose) {
-    message(
-        ">> preparing shuffle feature\t\t",
-        format(Sys.time(), "%Y-%m-%d %X")
-    )
-    }
-
-    # This seed is anniversary of me and Daisy :)
-    # set.seed(20160806)
-    shuffle_feature <- purrr::map(seq_len(shuffleN), function(x) {
-        sample(all_feature_id, size = length(input_feature_id))
-    })
-    TF_GR_list <- split(TF_GR_database, TF_GR_database$TF_id)
-
-    if (verbose) {
-    message(
-        ">> shuffling, which may be time consuming...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X")
-    )
-    }
-
-    pvalue_result <- bplapply(names(TF_GR_list), function(x) {
-        TF_GR <- TF_GR_list[[x]]
-
-        # Because we use the shuffle
-        # we can consider more than one Tf hit in one peak
-
-        # true_number <- length(unique(
-        #   S4Vectors::queryHits(GenomicRanges::findOverlaps(input_GR, TF_GR))
-        #   ))
-
-        hits <- GenomicRanges::findOverlaps(input_GR, TF_GR)
-
-        true_number <- length(hits)
-        hits_PeakNumber <- length(unique(queryHits(hits)))
-
-        background_number <- purrr::map_dbl(shuffle_feature, function(x) {
-            length(GenomicRanges::findOverlaps(peak_GR[x], TF_GR))
-        })
-
-        # https://stats.stackexchange.com/questions/50080/estimate-quantile-of-value-in-a-vector
-        pvalue <- 1 - ecdf(c(true_number, background_number))(true_number)
-
-        # the ratio of (input_hitN/hits_PeakNumber) / (whole_hitN/whole_hitPeakN)
-        # can be another indicators when p-value is 0
-        # for example, you have 50 peak, and hits by 200 times
-        # which means your peak have multiple locations for this TF
-        hits_whole <- GenomicRanges::findOverlaps(peak_GR, TF_GR)
-        whole_hitN <- length(hits_whole)
-        whole_hitPeakN <- length(unique(queryHits(hits_whole)))
-
-        df <- data.frame(
-            TF_id = x,
-            input_hitN = true_number,
-            input_hitPeakN = hits_PeakNumber,
-            shuffleMean_hitN = mean(background_number),
-            pvalue = pvalue,
-            whole_hitN = whole_hitN,
-            whole_hitPeakN = whole_hitPeakN,
-            TFPeak_number = length(TF_GR)
-        )
-        return(df)
-    })
-
-    if (verbose) {
-    message(
-        ">> merging all info together...\t\t",
-        format(Sys.time(), "%Y-%m-%d %X")
-    )
-    }
-
-    final_result <- do.call(rbind, pvalue_result)
-    final_result$rank <- rank(final_result$pvalue)
-    final_result <- dplyr::arrange(final_result, pvalue)
-    final_result <- tibble::tibble(final_result)
-
-    if (verbose) {
-    message(
-        ">> done\t\t",
-        format(Sys.time(), "%Y-%m-%d %X")
-    )
-    }
-
-    return(final_result)
-}
-
-
-
 #' findI(nfluential)T(F)_enrichFisher
 #'
 #' find influential TF of your input peak set compared with your whole peak sets
@@ -823,8 +673,8 @@ findIT_enrichInShuffle <- function(input_feature_id,
 #'     TF_GR_database = ChIP_peak_GR
 #' )
 findIT_enrichFisher <- function(input_feature_id,
-                               peak_GR,
-                               TF_GR_database) {
+                                peak_GR,
+                                TF_GR_database) {
 
     check_colnames("feature_id", peak_GR)
     check_duplicated(peak_GR)
