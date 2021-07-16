@@ -53,10 +53,10 @@ jaccard_findIT_TTpair <- function(input_genes,
 }
 
 
-#' jaccard_findIT_enrichInAll
+#' jaccard_findIT_enrichFisher
 #'
 #' @param input_feature_id a character vector which represent peaks set
-#' which you want to find influential TF for (same as your find_IT_enrichInAll parameter)
+#' which you want to find influential TF for (same as your find_IT_enrichFisher parameter)
 #' @param peak_GR a GRange object represent your whole feature location with a
 #' column named feature_id, which your input_feature_id should a part of it.
 #' @param TF_GR_database TF peak GRange with a column named TF_id representing you TF name
@@ -73,19 +73,19 @@ jaccard_findIT_TTpair <- function(input_genes,
 #' ChIP_peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
 #' ChIP_peak_GR <- loadPeakFile(ChIP_peak_path)
 #' ChIP_peak_GR$TF_id <- "AT1G28300"
-#' result_findIT_enrichInAll <- findIT_enrichInAll(
+#' result_findIT_enrichFisher <- findIT_enrichFisher(
 #'     input_feature_id = test_featureSet,
 #'     peak_GR = peak_GR,
 #'     TF_GR_database = ChIP_peak_GR
 #' )
 #'
-#' jaccard_findIT_enrichInAll(
+#' jaccard_findIT_enrichFisher(
 #'     input_feature_id = test_featureSet,
 #'     peak_GR = peak_GR,
 #'     TF_GR_database = ChIP_peak_GR,
-#'     input_TF_id = result_findIT_enrichInAll$TF_id[1]
+#'     input_TF_id = result_findIT_enrichFisher$TF_id[1]
 #' )
-jaccard_findIT_enrichInAll <- function(input_feature_id,
+jaccard_findIT_enrichFisher <- function(input_feature_id,
                                        peak_GR,
                                        TF_GR_database,
                                        input_TF_id) {

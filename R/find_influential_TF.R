@@ -669,7 +669,7 @@ findIT_TFHit <- function(input_genes,
 #' So the rank and p-value will be no useful.
 #'
 #' But it may be useful in about small number of peaks. It can consider the true hit numebrs in your peaks
-#' instead of 1 like findIT_enichInAll. And I also find fihser test in findIT_enrichInAll more not report significant
+#' instead of 1 like findIT_enichInAll. And I also find fihser test in findIT_enrichFisher more not report significant
 #' result in small number peaks.
 #'
 #'
@@ -793,7 +793,7 @@ findIT_enrichInShuffle <- function(input_feature_id,
 
 
 
-#' findI(nfluential)T(F)_enrichInAll
+#' findI(nfluential)T(F)_enrichFisher
 #'
 #' find influential TF of your input peak set compared with your whole peak sets
 #' based on TF ChIP-Seq or motif data.
@@ -817,12 +817,12 @@ findIT_enrichInShuffle <- function(input_feature_id,
 #' ChIP_peak_GR <- loadPeakFile(ChIP_peak_path)
 #' ChIP_peak_GR$TF_id <- "AT1G28300"
 #'
-#'  result_findIT_enrichInAll <- findIT_enrichInAll(
+#'  result_findIT_enrichFisher <- findIT_enrichFisher(
 #'     input_feature_id = test_featureSet,
 #'     peak_GR = peak_GR,
 #'     TF_GR_database = ChIP_peak_GR
 #' )
-findIT_enrichInAll <- function(input_feature_id,
+findIT_enrichFisher <- function(input_feature_id,
                                peak_GR,
                                TF_GR_database) {
 

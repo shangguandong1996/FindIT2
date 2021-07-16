@@ -90,14 +90,14 @@ test_that("findIT enrich In shuffle test", {
 
 
 test_that("findIT enrich In All test", {
-    result_findIT_enrichInAll <- findIT_enrichInAll(
+    result_findIT_enrichFisher <- findIT_enrichFisher(
         input_feature_id = test_featureSet,
         peak_GR = peak_GR,
         TF_GR_database = ChIP_peak_GR
     )
 
-    expect_equal(result_findIT_enrichInAll$inputRatio[1], "64/77")
-    expect_equal(is.na(result_findIT_enrichInAll$qvalue[1]), TRUE)
+    expect_equal(result_findIT_enrichFisher$inputRatio[1], "64/77")
+    expect_equal(is.na(result_findIT_enrichFisher$qvalue[1]), TRUE)
 })
 
 

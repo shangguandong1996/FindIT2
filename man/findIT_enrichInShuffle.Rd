@@ -39,7 +39,7 @@ And in this condition, there are many TF's p-value will be 0 even you shffule 1e
 So the rank and p-value will be no useful.
 
 But it may be useful in about small number of peaks. It can consider the true hit numebrs in your peaks
-instead of 1 like findIT_enichInAll. And I also find fihser test in findIT_enrichInAll more not report significant
+instead of 1 like findIT_enichInAll. And I also find fihser test in findIT_enrichFisher more not report significant
 result in small number peaks.
 }
 \examples{

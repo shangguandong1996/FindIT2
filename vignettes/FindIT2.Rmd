@@ -702,7 +702,7 @@ result_enrichInShuffle
 
 ## Find IT of input peak based on fisher test
 
-You can also find the enrichment of TF using `findIT_enrichInAll`, it use the 
+You can also find the enrichment of TF using `findIT_enrichFisher`, it use the 
 same theory like GO-enrich analysis. The background is total ATAC peak, and the 
 select set is your `input_feature_id`. Compared with `findIT_enrichInShuffle` 
 above, its runs more quickly. But it will have a little problem when using motif
@@ -713,27 +713,27 @@ information, which you can see in `findIT_MARA`. But it will do not have a big
 effect on the final result. After all, what we really need is TF rank instead of
 p-value.
 
-```{r "findIT_enrichInAll"}
-findIT_enrichInAll(input_feature_id = input_feature_id, 
+```{r "findIT_enrichFisher"}
+findIT_enrichFisher(input_feature_id = input_feature_id, 
                    peak_GR = ATAC_peak_GR, 
-                   TF_GR_database = TF_GR_database) -> result_enrichInAll
+                   TF_GR_database = TF_GR_database) -> result_enrichFisher
 
 # you can see AT1G28300 is top1
-result_enrichInAll
+result_enrichFisher
 
 ```
 
-In the meanwhile, you can parse your result using `jaccard_findIT_enrichInAll`,
+In the meanwhile, you can parse your result using `jaccard_findIT_enrichFisher`,
 which can help you find co-occupy TF in your `input_feature_id`. But please note
 you should not input too much TF_id in `input_TF_id` because it will run slowly.
 You can use the top rank gene as `input_TF_id`.
 
 ```{r}
 # Here I use the top 4 TF id to calculate jaccard similarity of TF
-jaccard_findIT_enrichInAll(input_feature_id = input_feature_id,
+jaccard_findIT_enrichFisher(input_feature_id = input_feature_id,
                            peak_GR = ATAC_peak_GR,
                            TF_GR_database = TF_GR_database,
-                           input_TF_id = result_enrichInAll$TF_id[1:4]) -> enrichAll_jaccard
+                           input_TF_id = result_enrichFisher$TF_id[1:4]) -> enrichAll_jaccard
 
 # it report the jaccard similarity of TF you input
 
@@ -747,7 +747,7 @@ enrichAll_jaccard
 
 ## Find IT of input genes based on fisher test
 
-The `findIT_TTPair` also use the fisher test like `findIT_enrichInAll`. The
+The `findIT_TTPair` also use the fisher test like `findIT_enrichFisher`. The
 difference is your input set is gene id instead of feature id. And it means that
 your database should be the `TF_target_database` like this.
 
@@ -1006,7 +1006,7 @@ using `integrate_replicates`.
 
 ```{r}
 list(TF_Hit = result_TFHit,
-     enrichAll = result_enrichInAll,
+     enrichAll = result_enrichFisher,
      enrichShuffle = result_enrichInShuffle,
      TT_pair = result_TTpair
      ) -> rank_merge_list

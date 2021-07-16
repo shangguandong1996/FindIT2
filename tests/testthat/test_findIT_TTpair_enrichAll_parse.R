@@ -36,7 +36,7 @@ test_that("jaccard findIT TTpair test",{
 test_that("jaccard findIT enrich in All test",{
 
     expect_true(is.matrix(
-        jaccard_findIT_enrichInAll(
+        jaccard_findIT_enrichFisher(
             input_feature_id = test_featureSet,
             peak_GR = peak_GR,
             TF_GR_database = ChIP_peak_GR,
@@ -44,7 +44,7 @@ test_that("jaccard findIT enrich in All test",{
         )
     ))
 
-    jaccard_result <- jaccard_findIT_enrichInAll(
+    jaccard_result <- jaccard_findIT_enrichFisher(
         input_feature_id = test_featureSet,
         peak_GR = peak_GR,
         TF_GR_database = TF_GR_database,
