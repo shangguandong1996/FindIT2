@@ -10,7 +10,7 @@ utils::globalVariables(c(
     "TF_id", "num_TFHit_bg", "num_topLeft", "num_bottomLeft",
     "num_topRight", "num_TFHit_inputFeature"
 ))
-utils::globalVariables(c(".", "hit_N", "TF_score"))
+utils::globalVariables(c(".", "hit_N", "TF_score", "TF_score_sum"))
 
 
 #' findI(nfluential)T(F)_regionRP
@@ -641,7 +641,154 @@ findIT_TFHit <- function(input_genes,
     return(final_result)
 }
 
+#' findIT_enrichWilcox
+#'
+#' @param input_feature_id a character vector which represent peaks set
+#' which you want to find influential TF for
+#' @param peak_GR a GRange object represent your whole feature location with a
+#' column named feature_id, which your input_feature_id should a part of it.
+#' @param TF_GR_database TF peak GRange with a column named TF_id representing you TF name
+#' @param background_peaks a character vector which represent background peak set.
+#' If you do not assign background peaks, program will sample
+#' background_number peaks as background peaks from all feature_id in your peak_GR
+#' @param background_number background peaks number
+#'
+#' @return data.frame
+#' @export
+#'
+#' @examples
+#' data("test_featureSet")
+#' peak_path <- system.file("extdata", "ATAC.bed.gz", package = "FindIT2")
+#' peak_GR <- loadPeakFile(peak_path)
+#' ChIP_peak_path <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
+#' ChIP_peak_GR <- loadPeakFile(ChIP_peak_path)
+#' ChIP_peak_GR$TF_id <- "AT1G28300"
+#'
+#' result_findIT_enrichWilcox <- findIT_enrichWilcox(
+#'     input_feature_id = test_featureSet,
+#'     peak_GR = peak_GR,
+#'     TF_GR_database = ChIP_peak_GR
+#' )
+findIT_enrichWilcox <- function(input_feature_id,
+                                peak_GR,
+                                TF_GR_database,
+                                background_peaks = NULL,
+                                background_number = 3000) {
 
+    check_colnames("feature_id", peak_GR)
+    check_duplicated(peak_GR)
+    check_colnames("TF_id", TF_GR_database)
+
+    input_feature_id <- unique(input_feature_id)
+    all_feature_id <- unique(peak_GR$feature_id)
+
+    if ( mean(input_feature_id %in% all_feature_id) < 1 ) {
+        stop("some of your input_feature_id is not your peak_GR feature_id set",
+             call. = FALSE)
+    }
+
+    names(peak_GR) <- peak_GR$feature_id
+    input_GR <- peak_GR[input_feature_id]
+
+    if (is.null(background_peaks)) {
+        background_pool <- all_feature_id[!all_feature_id %in% input_feature_id]
+        background_peaks <- sample(background_pool, background_number)
+
+    } else if (mean(background_peaks %in% all_feature_id) < 1) {
+        dropN <- sum(!background_peaks %in% all_feature_id)
+        background_peaks <- background_peaks[background_peaks %in% all_feature_id]
+        msg <- paste0(
+            dropN,
+            " background peaks are not in your peak GR feature id sets, ",
+            "I will filter these peak"
+        )
+        warning(msg, call. = FALSE)
+    }
+
+
+    if (any(input_feature_id %in% background_peaks)) {
+        warning("your input and background have overlapping peak", call. = FALSE)
+    }
+
+    peak_twoSets <- c(input_feature_id, background_peaks)
+    peak_GR_select <- peak_GR[peak_twoSets]
+
+    hits <- GenomicRanges::findOverlaps(TF_GR_database, peak_GR_select)
+
+    hits_df <- data.frame(
+        TF_id = TF_GR_database$TF_id[queryHits(hits)],
+        feature_id = peak_GR_select$feature_id[subjectHits(hits)],
+        stringsAsFactors = FALSE
+    )
+
+    if ("TF_score" %in% colnames(mcols(TF_GR_database))) {
+        hits_df$TF_score <- TF_GR_database$TF_score[queryHits(hits)]
+    } else {
+        hits_df$TF_score <- 1
+    }
+
+    hits_df_sum <- hits_df %>%
+        dplyr::group_by(TF_id, feature_id) %>%
+        dplyr::summarise(TF_score_sum = sum(TF_score))
+
+    all_TF <- unique(TF_GR_database$TF_id)
+    fill_hitN <- data.frame(
+        TF_id = rep(all_TF, each = length(peak_twoSets)),
+        feature_id = rep(peak_twoSets, length(all_TF)),
+        fill = "foo"
+    )
+
+    hits_sum_fill <- fill_hitN %>%
+        dplyr::left_join(hits_df_sum) %>%
+        dplyr::mutate(TF_score_sum = dplyr::case_when(
+            is.na(TF_score_sum) ~ 0,
+            TRUE ~ TF_score_sum
+        ))
+
+
+    hits_sum_input <- hits_sum_fill %>%
+        dplyr::filter(feature_id %in% input_feature_id)
+
+    hits_sum_background <- hits_sum_fill %>%
+        dplyr::filter(feature_id %in% background_peaks)
+
+    allTF_list <- purrr::map(all_TF, function(x){
+        input_score <- hits_sum_input %>%
+            dplyr::filter(TF_id %in% x) %>%
+            dplyr::pull(TF_score_sum)
+
+        background_score <- hits_sum_background %>%
+            dplyr::filter(TF_id %in% x) %>%
+            dplyr::pull(TF_score_sum)
+
+        pvalue <- wilcox.test(input_score,
+                              background_score,
+                              alternative = "greater")$p.value
+
+        result_tb <- tibble::tibble(TF_id = x,
+                                    input_meanMotifScore = mean(input_score),
+                                    bg_meanMotifScore = mean(background_score),
+                                    pvalue = pvalue)
+
+        return(result_tb)
+    })
+
+    final_result <- do.call(rbind, allTF_list)
+    final_result <- final_result %>%
+        dplyr::mutate(pvalue = dplyr::case_when(
+            pvalue > 1 ~ 1,
+            TRUE ~ pvalue
+        ),
+        padj = p.adjust(pvalue),
+        qvalue = calcQvalue(pvalue),
+        rank = rank(pvalue)) %>%
+        dplyr::arrange(pvalue)
+
+    return(final_result)
+
+
+
+}
 
 #' findI(nfluential)T(F)_enrichFisher
 #'

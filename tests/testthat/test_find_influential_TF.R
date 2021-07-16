@@ -74,10 +74,23 @@ test_that("findIT TFHit test", {
         tolerance = 0.0001)
 })
 
+test_that("findIT enrichWilcox test", {
+    set.seed(20160806)
+    result_findIT_enrichWilcox <- findIT_enrichWilcox(
+        input_feature_id = test_featureSet,
+        peak_GR = peak_GR,
+        TF_GR_database = ChIP_peak_GR
+    )
+
+    expect_equal(result_findIT_enrichWilcox$bg_meanMotifScore[1], 0.498)
+    expect_equal(result_findIT_enrichWilcox$pvalue[1], 2.040431e-17,
+                 tolerance = 1e-5)
+    expect_equal(is.na(result_findIT_enrichWilcox$qvalue[1]), TRUE)
+})
 
 
 
-test_that("findIT enrich In All test", {
+test_that("findIT enrichFisher test", {
     result_findIT_enrichFisher <- findIT_enrichFisher(
         input_feature_id = test_featureSet,
         peak_GR = peak_GR,

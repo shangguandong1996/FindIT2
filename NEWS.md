@@ -1,5 +1,6 @@
 # Changes in version 0.99.11 (2021-07-16)
 
+- add `findIT_enrichWilcox` function
 - delete `findIT_enrichInShuffle` function
 - rename `findIT_enrichInAll` to `findIT_enrichFisher`
 

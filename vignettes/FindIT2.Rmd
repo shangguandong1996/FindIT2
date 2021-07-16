@@ -671,6 +671,32 @@ TF_GR_database
 
 ```
 
+## Find IT of input peak based on wilcox test
+
+Compared with background peak, if TF in `input_feature_id` has more TF hit, this
+TF may be important in your `input_feature_id`. 
+
+If your `TF_GR_database` is from motif scan result and have a column named `TF_score`, `findIT_enrichWilcox` will consider it to improve the accuracy. The `TF_score` always be the fifth column in your motif scan bed file and it represent your motif hit confidence in the location.
+
+Here is the example bed output from `gimmeMotif scan`. The fifth column can be
+treated as `TF_score`. You can directly load this bed file and rename or add meta column
+just like `feature_score` before.
+```
+Chr1    2982    2989    MA0982.1_DOF2.4 5.817207239414311       +
+Chr1    3085    3097    MA1044.1_NAC92  8.87118934508003        -
+Chr1    3146    3165    MA1062.2_TCP15  7.842209471388505       +
+Chr1    3146    3165    MA1065.2_TCP20  7.86289776912883        +
+```
+
+```{r "findIT_enrichWilcox"}
+findIT_enrichWilcox(input_feature_id = input_feature_id, 
+                    peak_GR = ATAC_peak_GR, 
+                    TF_GR_database = TF_GR_database) -> result_enrichWilcox
+
+# you can see AT1G28300 is top1
+result_enrichWilcox
+
+```
 
 
 ## Find IT of input peak based on fisher test
@@ -978,7 +1004,8 @@ using `integrate_replicates`.
 
 ```{r}
 list(TF_Hit = result_TFHit,
-     enrichAll = result_enrichFisher,
+     enrichFisher = result_enrichFisher,
+     wilcox = result_enrichWilcox,
      TT_pair = result_TTpair
      ) -> rank_merge_list
 purrr::map(names(rank_merge_list), .f = function(x){
