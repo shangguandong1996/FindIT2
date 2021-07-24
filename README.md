@@ -23,7 +23,9 @@ introduce all these function in vignettes.
 
 ## Installation instructions
 
-`FindIT2` is available on Bioconductor, you can install it by:
+`FindIT2` is available on
+[Bioconductor](https://bioconductor.org/packages/devel/bioc/html/FindIT2.html),
+you can install it by:
 
 ``` r
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
