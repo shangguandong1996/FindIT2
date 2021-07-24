@@ -93,8 +93,9 @@ findIT_regionRP <- function(regionRP,
 
     if (is.null(background_genes)) {
         background_pools <- all_geneSets[!all_geneSets %in% input_genes]
+        # Do not use set.seed() in any internal code.
         # This seed is anniversary of me and Daisy :)
-        # set.seed(seed)
+        # set.seed(20160806)
         background_genes <- sample(background_pools,size = background_number)
 
     } else if (mean(background_genes %in% all_geneSets) < 1) {
@@ -516,8 +517,6 @@ findIT_TFHit <- function(input_genes,
 
     if (is.null(background_genes)) {
         background_pools <- all_geneSets[!all_geneSets %in% input_genes]
-        # This seed is anniversary of me and Daisy :)
-        # set.seed(seed)
         background_genes <- sample(background_pools,size = background_number)
 
     } else if (mean(background_genes %in% all_geneSets) < 1) {
@@ -625,11 +624,19 @@ findIT_TFHit <- function(input_genes,
     final_result <- tibble::tibble(final_result)
     colnames(final_result) <- c("mean_value", "pvalue", "TFPeak_number")
 
-    final_result$rank <- rank(final_result$pvalue)
-    final_result$TF_id <- names(TF_GR_list)
-    final_result <- final_result[, c("TF_id", "mean_value",
-                                     "pvalue", "TFPeak_number", "rank")]
-    final_result <- dplyr::arrange(final_result, pvalue)
+    final_result <- final_result %>%
+        dplyr::mutate(TF_id = names(TF_GR_list),
+                      pvalue = dplyr::case_when(
+                          pvalue > 1 ~ 1,
+                          TRUE ~ pvalue),
+                      padj = p.adjust(pvalue),
+                      qvalue = calcQvalue(pvalue),
+                      rank = rank(pvalue)) %>%
+        dplyr::select("TF_id", "mean_value", "TFPeak_number",
+                      "pvalue", "padj", "qvalue",
+                      "rank") %>%
+        dplyr::arrange(pvalue)
+
 
     if (verbose) {
     message(
@@ -738,12 +745,12 @@ findIT_enrichWilcox <- function(input_feature_id,
         fill = "foo"
     )
 
-    hits_sum_fill <- fill_hitN %>%
+    hits_sum_fill <- suppressMessages(fill_hitN %>%
         dplyr::left_join(hits_df_sum) %>%
         dplyr::mutate(TF_score_sum = dplyr::case_when(
             is.na(TF_score_sum) ~ 0,
             TRUE ~ TF_score_sum
-        ))
+        )))
 
 
     hits_sum_input <- hits_sum_fill %>%

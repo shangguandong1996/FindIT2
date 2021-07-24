@@ -196,6 +196,11 @@ enhancerPromoterCor <- function(peak_GR,
                                 parallel = FALSE,
                                 verbose = TRUE) {
 
+    if (any(c("mmAnno_mode", "mmCor_mode") %in% names(metadata(peak_GR)))) {
+        stop("please do not use the annotated peak GR produced from other functions",
+             call. = FALSE)
+    }
+
     peak_GR <- check_peakGR(peak_GR = peak_GR, Txdb = Txdb)
     check_duplicated(peak_GR)
 
