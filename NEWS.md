@@ -1,3 +1,6 @@
+# Changes in version 0.99.13(2021-08-11)
+- convert geom_density into geom_hist in plot_annoDistance function
+
 # Changes in version 0.99.11 (2021-07-16)
 
 - add `findIT_enrichWilcox` function

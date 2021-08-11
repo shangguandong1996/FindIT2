@@ -1,6 +1,6 @@
 Package: FindIT2
 Title: find influential TF and Target based on multi-omics data
-Version: 0.99.12
+Version: 0.99.13
 Authors@R:
     c(
     person("Guandong", "Shang", role = c("aut", "cre"),

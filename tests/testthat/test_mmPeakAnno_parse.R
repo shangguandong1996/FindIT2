@@ -31,7 +31,7 @@ test_that("plot_annoDistance test", {
     pb_2 <- ggplot2::ggplot_build(p[[2]])
 
 
-    expect_equal(pb_1$data[[1]]$density[1], 0.2217997, tolerance = 1e-5)
+    expect_equal(pb_1$data[[1]]$density[1], 3.372373, tolerance = 1e-5)
     expect_match(pb_1$data[[2]]$label, "\nMedian :  200.5")
 
     expect_equal(pb_2$data[[1]]$density[250], 0.0001044554, tolerance = 1e-5)

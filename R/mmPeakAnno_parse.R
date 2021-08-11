@@ -148,7 +148,7 @@ plot_annoDistance <- function(mmAnno,
     )
 
     p1 <- ggplot2::ggplot(data.frame(mmAnno), aes(x = abs_dist)) +
-        ggplot2::geom_density() +
+        ggplot2::geom_histogram(bins = 50) +
         ggplot2::scale_x_log10() +
         ggplot2::theme_bw() +
         ggplot2::xlab("abs(distanceToTSS) + 1") +
