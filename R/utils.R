@@ -27,10 +27,19 @@ check_seqlevel <- function(peak_GR, Txdb, print_ChrN = 10) {
              call. = FALSE
             )
     } else if (any(!seqlevels(peak_GR) %in% seqlevels(Txdb))) {
+        chrNotIn <- seqlevels(peak_GR)[!seqlevels(peak_GR) %in% seqlevels(Txdb)]
+        if(length(chrNotIn) > print_ChrN){
+            chr_msg <- paste(chrNotIn[seq_len(print_ChrN)],
+                             collapse = " ")
+        } else {
+            chr_msg <- paste(chrNotIn,
+                             collapse = " ")
+        }
+
         msg <- paste0(
             "some peak's Chr is nor in your Txdb, for example: ",
-            seqlevels(peak_GR)[!seqlevels(peak_GR) %in% seqlevels(Txdb)],
-            "  I have filtered peaks in these Chr, though seqlevels still retain."
+            chr_msg, "...",
+            "\nI have filtered peaks in these Chr, though seqlevels still retain."
         )
         warning(msg,call. = FALSE)
     } else {

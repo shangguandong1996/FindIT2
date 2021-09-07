@@ -102,7 +102,7 @@ calcRP_coverage <- function(bwFile,
 
     if (verbose){
     message(
-        ">> loading", basename(bwFile), "info...\t\t",
+        ">> loading ", basename(bwFile), "info...\t\t",
         format(Sys.time(), "%Y-%m-%d %X")
     )
     }
@@ -118,7 +118,7 @@ calcRP_coverage <- function(bwFile,
         if (verbose){
         message("------------")
         message(
-            ">> extracting and calcluating", Chr, "signal...\t\t",
+            ">> extracting and calcluating ", Chr, "signal...\t\t",
             format(Sys.time(), "%Y-%m-%d %X")
         )
         }
@@ -142,7 +142,7 @@ calcRP_coverage <- function(bwFile,
 
         if (length(scan_region_left) > 0) {
             message(
-                ">> dealing with", Chr, "left gene signal...\t\t",
+                ">> dealing with ", Chr, "left gene signal...\t\t",
                 format(Sys.time(), "%Y-%m-%d %X")
             )
             gene_left <- names(scan_region_left)
@@ -175,7 +175,7 @@ calcRP_coverage <- function(bwFile,
         # different Chrs has own RP profile
         if (verbose){
         message(
-            ">> norming", Chr, "RP accoring to the whole Chr RP...\t\t",
+            ">> norming ", Chr, "RP accoring to the whole Chr RP...\t\t",
             format(Sys.time(), "%Y-%m-%d %X")
         )
         }
