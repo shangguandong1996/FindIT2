@@ -1,6 +1,6 @@
 Package: FindIT2
 Title: find influential TF and Target based on multi-omics data
-Version: 1.1.0
+Version: 1.1.1
 Authors@R:
     c(
     person("Guandong", "Shang", role = c("aut", "cre"),
@@ -22,7 +22,7 @@ BugReports: https://support.bioconductor.org/t/FindIT2
 biocViews: Software, Annotation, ChIPSeq, ATACSeq, GeneRegulation, MultipleComparison, GeneTarget
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Suggests: 
     BiocStyle,
     knitr,

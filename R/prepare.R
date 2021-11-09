@@ -3,47 +3,36 @@
 #' read peak file and transform it into GRanges object
 #'
 #' @param filePath peak Path
-#' @param fromMACS2 whether peak from MACS2.If it set TRUE, extra column in bed
-#' file will be named according to the content in MACS2 manual
-#' @param narrowPeak whether peak is narrowPeak or broadPeak.
+#' @param TFBS_database whether your peak file is a TFBS database file. If you
+#' want the final GRanges have a column named "TF_id", you should set TFBS_database
+#' TRUE. The GRanges with TF_id can be applied in "TF_GR_database" parameter of
+#' findIT_TFHit, findIT_enrichFisher, findIT_enrichWilcox, findIT_regionRP. If
+#' FALSE, the GRanges will have a column named "feature_id", which always be the input
+#' of "peak_GR" parameter.
 #'
-#' @return GRanges object with a column named feature_id, which is important
-#' for later analysis
+#'
+#' @return GRanges object with a column named feature_id or TF_id
 #' @export
 #'
 #' @examples
 #' peakfile <- system.file("extdata", "ChIP.bed.gz", package = "FindIT2")
 #' loadPeakFile(peakfile)
+#'
+#' @details
+#' The GRanges with TF_id always be the input of "TF_GR_database" parameter. It
+#' represents the TFBS database like motif scan result, public database ChIP-seq
+#' site and so on.
+#'
+#' The GRanges with feature_id always be the input of "peak_GR" parameter.
+#'
 loadPeakFile <- function(filePath,
-    fromMACS2 = FALSE,
-    narrowPeak = TRUE) {
-    if (fromMACS2) {
-        if (narrowPeak) {
-            # This idea is from
-            # https://charlesjb.github.io/How_to_import_narrowPeak/
-            extraCols <- c(
-                Fold = "numeric", pValue = "numeric",
-                qValue = "numeric", relative_summit = "integer"
-            )
-            peak_GR <- rtracklayer::import(
-                con = filePath,
-                format = "BED",
-                extraCols = extraCols
-            )
-        } else {
-            extraCols <- c(
-                Fold = "numeric", pValue = "numeric",
-                qValue = "numeric"
-            )
-            peak_GR <- rtracklayer::import(
-                con = filePath,
-                format = "BED",
-                extraCols = extraCols
-            )
-        }
+                         TFBS_database = FALSE) {
+
+    peak_GR <- rtracklayer::import(con = filePath)
+    if (TFBS_database){
+        colnames(S4Vectors::mcols(peak_GR))[1] <- "TF_id"
     } else {
-        peak_GR <- rtracklayer::import(con = filePath)
+        colnames(S4Vectors::mcols(peak_GR))[1] <- "feature_id"
     }
-    colnames(S4Vectors::mcols(peak_GR))[1] <- "feature_id"
     return(peak_GR)
 }

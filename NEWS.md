@@ -1,3 +1,6 @@
+# Changes in version 1.0.1(2021-11-09)
+- simplify `loadPeakFile` function
+
 # Changes in version 0.99.13(2021-08-11)
 - convert geom_density into geom_hist in plot_annoDistance function
 
