@@ -245,6 +245,10 @@ integrate_replicates <- function(mt,
         fun <- fun
     }
 
+    if (is.factor(colData$type)) {
+        colData$type <- as.character(colData$type)
+    }
+
     replicates <- colData$type
     sample <- unique(colData$type)
 
