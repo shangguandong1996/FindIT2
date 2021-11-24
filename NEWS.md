@@ -1,3 +1,6 @@
+# Changes in version 1.0.2(2021-11-23)
+- fix bug when type in colData is factor (integtate_replicates function)
+
 # Changes in version 1.0.1(2021-11-09)
 - simplify `loadPeakFile` function
 
