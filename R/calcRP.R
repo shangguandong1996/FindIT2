@@ -102,7 +102,7 @@ calcRP_coverage <- function(bwFile,
 
     if (verbose){
     message(
-        ">> loading ", basename(bwFile), "info...\t\t",
+        ">> loading ", basename(bwFile), " info...\t\t",
         format(Sys.time(), "%Y-%m-%d %X")
     )
     }
@@ -112,13 +112,22 @@ calcRP_coverage <- function(bwFile,
         as = "RleList"
     )
 
+    # some bigwig file chr name may inconsistent with Txdb
+    ChrsInBw <- seqnames(seqinfo(bwInfo))
+    Chrs_included <- Chrs_included[Chrs_included %in% ChrsInBw]
+    if (length(Chrs_included) == 0){
+        stop("your chr name in bigwig file is not consistent with Txdb",
+             call. = FALSE
+        )
+    }
+
     signal_list <- list()
 
     for (Chr in Chrs_included) {
         if (verbose){
         message("------------")
         message(
-            ">> extracting and calcluating ", Chr, "signal...\t\t",
+            ">> extracting and calcluating ", Chr, " signal...\t\t",
             format(Sys.time(), "%Y-%m-%d %X")
         )
         }
@@ -127,6 +136,7 @@ calcRP_coverage <- function(bwFile,
             width(scan_region) == (2 * scan_dist + 1)]
         view <- Views(bwInfo[Chr][[1]], ranges(scan_region_included))
         signal_Part1 <- viewApply(view, function(x) sum(as.numeric(x) * weight))
+
 
         # # a test
         # value <- vector(mode = "numeric", length = 1000)
@@ -142,7 +152,7 @@ calcRP_coverage <- function(bwFile,
 
         if (length(scan_region_left) > 0) {
             message(
-                ">> dealing with ", Chr, "left gene signal...\t\t",
+                ">> dealing with ", Chr, " left gene signal...\t\t",
                 format(Sys.time(), "%Y-%m-%d %X")
             )
             gene_left <- names(scan_region_left)
@@ -165,10 +175,16 @@ calcRP_coverage <- function(bwFile,
 
 
             names(signal_Part2) <- gene_left
+        }
 
+        if (length(signal_Part1) > 0 & length(signal_Part2) > 0){
             signal_merge <- c(signal_Part1, signal_Part2)
-        } else {
+        } else if (length(signal_Part1) > 0 & length(signal_Part2) == 0) {
             signal_merge <- signal_Part1
+        } else if (length(signal_Part1) == 0 & length(signal_Part2) > 0) {
+            signal_merge <- signal_Part2
+        } else {
+            signal_merge <- 0
         }
 
         # normalized per Chr
