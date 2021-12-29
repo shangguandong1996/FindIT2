@@ -1,3 +1,6 @@
+# Changes in version 1.0.3(2021-12-29)
+- fix bug when chrosome length is too small (calcRP_coverage function)
+
 # Changes in version 1.0.2(2021-11-23)
 - fix bug when type in colData is factor (integtate_replicates function)
 
