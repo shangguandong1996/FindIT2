@@ -1,3 +1,6 @@
+# add citation in version 1.2.1(20220510)
+- add FindIT2 publictation info so people can cite
+
 # Changes in version 1.0.3(2021-12-29)
 - fix bug when chrosome length is too small (calcRP_coverage function)
 

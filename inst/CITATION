@@ -1,0 +1,24 @@
+citHeader("To cite FindIT2 in publications use: Guandong Shang(2022)")
+
+citEntry(
+  entry    = "Article",
+  title    = "FindIT2: an R/Bioconductor package to identify influential transcription factor and targets based on multi-omics data",
+  author   = personList(
+  as.person("Guandong Shang"),
+  as.person("Zhougeng Xu"),
+  as.person("Muchun Wan"),
+  as.person("Fuxiang Wang"),
+  as.person("Jiawei Wang")
+  ),
+  journal  = "BMC Genomics",
+  year     = "2022",
+  volume   = "23",
+  number   = "S1",
+  pages    = "272",
+  url      = "https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-022-08506-8",
+  doi      = "10.1186/s12864-022-08506-8",
+  textVersion = paste("Shang, G.-D., Xu, Z.-G., Wan, M.-C., Wang, F.-X. & Wang, J.-W. ",
+  "FindIT2: an R/Bioconductor package to identify influential transcription factor and targets based on multi-omics data. ",
+  "BMC Genomics 23, 272 (2022)"
+  )
+)

@@ -1066,7 +1066,7 @@ findIT_MARA <- function(input_feature_id,
 
         if (verbose) {
         message(
-            ">> dealing with", sample, "...\t\t",
+            ">> dealing with ", sample, "...\t\t",
             format(Sys.time(), "%Y-%m-%d %X")
         )
         }
