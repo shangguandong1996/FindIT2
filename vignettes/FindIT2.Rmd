@@ -106,6 +106,10 @@ all_geneSet <- genes(Txdb)
 
 ```
 
+> Because of the storage restriction, the data used here is a small data set, which 
+may not show the deatiled information for result. The user can read the [FindIT2 paper](https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-022-08506-8) 
+and [related github repo](https://github.com/shangguandong1996/FindIT2_paper_relatedCode) to see more detailed information and practical example.
+
 # Multi-peak multi-gene annotation
 The multi-peak multi-gene annotation(mmPeakAnno) is the basic of this package.
 Most function will use the result of mmPeakAnno. So I explain them first.
