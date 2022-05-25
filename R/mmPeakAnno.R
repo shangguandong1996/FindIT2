@@ -49,6 +49,16 @@ mm_nearestGene <- function(peak_GR,
     gene_location <- genes(Txdb)
     gene_start <- resize(gene_location, width = 1, fix = "start")
 
+    # some scaffold in Txdb may not have gene
+    # while these scaffold still have peak
+    # These scaffold still matain when 
+    # chrominfo <- read.table("XX.fa.fai")[, 1:2]
+    # colnames(chrominfo) <- c("chrom", "length")
+    # Txdb <- makeTxDbFromGFF("XXgtf", chrominfo = chrominfo)
+    
+    chrom_withGene <- unique(as.character(seqnames(gene_location)))
+    peak_GR <- subset(peak_GR, seqnames %in% chrom_withGene)
+    
     if (verbose){
     message(
         ">> finding nearest gene and calculating distance...\t\t",
@@ -177,6 +187,17 @@ mm_geneScan <- function(peak_GR,
 
     gene_location <- GenomicFeatures::genes(Txdb)
     gene_start <- resize(gene_location, width = 1, fix = "start")
+
+    # some scaffold in Txdb may not have gene
+    # while these scaffold still have peak
+    # These scaffold still matain when 
+    # chrominfo <- read.table("XX.fa.fai")[, 1:2]
+    # colnames(chrominfo) <- c("chrom", "length")
+    # Txdb <- makeTxDbFromGFF("XXgtf", chrominfo = chrominfo)
+    
+    chrom_withGene <- unique(as.character(seqnames(gene_location)))
+    peak_GR <- subset(peak_GR, seqnames %in% chrom_withGene)
+    
 
     gene_promoter <- suppressWarnings(promoters(gene_location,
         upstream = upstream,
